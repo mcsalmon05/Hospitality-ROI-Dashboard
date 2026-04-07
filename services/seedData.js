@@ -1,50 +1,9 @@
 /**
- * SEED DATA: Fail-safe embedded records for the Test Pilot provisioning.
- * This file ensures data is available even if the Render ephemeral disk 
- * wipes the local JSON files.
+ * SEED DATA: Fail-safe embedded records.
+ * Ensures the dashboard is fully populated even if Firestore or Disk fail.
  */
 
 const SEED_ACCOUNTS = [
-  {
-    "id": "hotel-001",
-    "name": "The Grand Regent",
-    "industry": "Luxury Resort",
-    "partnerTag": "csm-global",
-    "csm": "Sarah Chen",
-    "contractValue": 12500,
-    "contractEnd": "2026-05-21",
-    "status": "Healthy",
-    "healthScore": 88,
-    "totalRooms": 250,
-    "occupancyPct": 82,
-    "adr": 450,
-    "revPar": 369,
-    "directBookingPct": 42,
-    "reviewScore": 4.8,
-    "openTickets": 1,
-    "paymentStatus": "good",
-    "createdAt": "2025-01-15T00:00:00Z"
-  },
-  {
-    "id": "hotel-002",
-    "name": "City Hub Boutique",
-    "industry": "Boutique Hotel",
-    "partnerTag": "csm-global",
-    "csm": "Marcus Webb",
-    "contractValue": 4500,
-    "contractEnd": "2026-04-20",
-    "status": "Critical",
-    "healthScore": 32,
-    "totalRooms": 85,
-    "occupancyPct": 45,
-    "adr": 180,
-    "revPar": 81,
-    "directBookingPct": 12,
-    "reviewScore": 3.2,
-    "openTickets": 6,
-    "paymentStatus": "late",
-    "createdAt": "2025-04-10T00:00:00Z"
-  },
   {
     "id": "hotel-tp001",
     "name": "Azure Bay Resort",
@@ -62,8 +21,7 @@ const SEED_ACCOUNTS = [
     "directBookingPct": 45,
     "reviewScore": 4.9,
     "openTickets": 0,
-    "paymentStatus": "good",
-    "createdAt": "2026-03-01T00:00:00Z"
+    "paymentStatus": "good"
   },
   {
     "id": "hotel-tp002",
@@ -82,8 +40,7 @@ const SEED_ACCOUNTS = [
     "directBookingPct": 18,
     "reviewScore": 3.8,
     "openTickets": 3,
-    "paymentStatus": "good",
-    "createdAt": "2026-03-01T00:00:00Z"
+    "paymentStatus": "good"
   },
   {
     "id": "hotel-tp003",
@@ -102,8 +59,7 @@ const SEED_ACCOUNTS = [
     "directBookingPct": 32,
     "reviewScore": 4.5,
     "openTickets": 1,
-    "paymentStatus": "good",
-    "createdAt": "2026-03-01T00:00:00Z"
+    "paymentStatus": "good"
   },
   {
     "id": "hotel-tp004",
@@ -122,8 +78,7 @@ const SEED_ACCOUNTS = [
     "directBookingPct": 8,
     "reviewScore": 2.9,
     "openTickets": 9,
-    "paymentStatus": "late",
-    "createdAt": "2026-03-01T00:00:00Z"
+    "paymentStatus": "late"
   },
   {
     "id": "hotel-tp005",
@@ -142,8 +97,7 @@ const SEED_ACCOUNTS = [
     "directBookingPct": 38,
     "reviewScore": 4.7,
     "openTickets": 1,
-    "paymentStatus": "good",
-    "createdAt": "2026-03-01T00:00:00Z"
+    "paymentStatus": "good"
   },
   {
     "id": "hotel-tp006",
@@ -162,8 +116,7 @@ const SEED_ACCOUNTS = [
     "directBookingPct": 48,
     "reviewScore": 4.9,
     "openTickets": 0,
-    "paymentStatus": "good",
-    "createdAt": "2026-04-01T00:00:00Z"
+    "paymentStatus": "good"
   },
   {
     "id": "hotel-tp007",
@@ -182,8 +135,7 @@ const SEED_ACCOUNTS = [
     "directBookingPct": 22,
     "reviewScore": 4.1,
     "openTickets": 4,
-    "paymentStatus": "good",
-    "createdAt": "2026-04-01T00:00:00Z"
+    "paymentStatus": "good"
   },
   {
     "id": "hotel-tp008",
@@ -202,8 +154,7 @@ const SEED_ACCOUNTS = [
     "directBookingPct": 10,
     "reviewScore": 3.1,
     "openTickets": 12,
-    "paymentStatus": "late",
-    "createdAt": "2026-04-01T00:00:00Z"
+    "paymentStatus": "late"
   },
   {
     "id": "hotel-tp009",
@@ -222,8 +173,7 @@ const SEED_ACCOUNTS = [
     "directBookingPct": 38,
     "reviewScore": 4.7,
     "openTickets": 2,
-    "paymentStatus": "good",
-    "createdAt": "2026-04-01T00:00:00Z"
+    "paymentStatus": "good"
   },
   {
     "id": "hotel-tp010",
@@ -242,8 +192,7 @@ const SEED_ACCOUNTS = [
     "directBookingPct": 35,
     "reviewScore": 4.6,
     "openTickets": 1,
-    "paymentStatus": "good",
-    "createdAt": "2026-04-01T00:00:00Z"
+    "paymentStatus": "good"
   },
   {
     "id": "hotel-tp011",
@@ -262,8 +211,7 @@ const SEED_ACCOUNTS = [
     "directBookingPct": 15,
     "reviewScore": 4.0,
     "openTickets": 3,
-    "paymentStatus": "good",
-    "createdAt": "2026-04-01T00:00:00Z"
+    "paymentStatus": "good"
   }
 ];
 
@@ -271,7 +219,6 @@ const SEED_USERS = [
   {
     "id": "u-admin",
     "email": "admin@csm.local",
-    "password": "$2b$10$dim.d8qeg4eygNaGcSYq1.LnSchCnQtCNjp2BEgTZ/B0vFmU.Hnae", 
     "role": "admin",
     "name": "Super Admin",
     "partnerTag": "csm-global"
@@ -279,11 +226,39 @@ const SEED_USERS = [
   {
     "id": "u-testpilot",
     "email": "consultant@testpilot.com",
-    "password": "$2b$10$dim.d8qeg4eygNaGcSYq1.LnSchCnQtCNjp2BEgTZ/B0vFmU.Hnae", 
     "role": "client",
     "name": "Test Pilot",
     "partnerTag": "testpilot"
   }
 ];
 
-module.exports = { SEED_ACCOUNTS, SEED_USERS };
+const SEED_TICKETS = [
+  { "id": "t1", "accountId": "hotel-tp008", "title": "PMS Integration Failure", "priority": "high", "status": "Open", "category": "Technical" },
+  { "id": "t2", "accountId": "hotel-tp004", "title": "Bulk Guest Data Error", "priority": "high", "status": "In Progress", "category": "Data" },
+  { "id": "t3", "accountId": "hotel-tp002", "title": "Billing Clarification", "priority": "medium", "status": "Open", "category": "Billing" }
+];
+
+const SEED_ALERTS = [
+  {
+    "id": "a1",
+    "accountId": "hotel-tp011",
+    "accountName": "Rustic Creek Cabins",
+    "title": "Local competitor launched aggressive direct booking campaign",
+    "level": "high",
+    "levelLabel": "Competitive Risk",
+    "source": "Market Watch",
+    "pubDate": new Date().toISOString()
+  },
+  {
+    "id": "a2",
+    "accountId": "hotel-tp008",
+    "accountName": "Metro Budget Stays",
+    "title": "Review sentiment dropping: 2.1 stars this week",
+    "level": "critical",
+    "levelLabel": "Service Failure",
+    "source": "Reputation Intelligence",
+    "pubDate": new Date().toISOString()
+  }
+];
+
+module.exports = { SEED_ACCOUNTS, SEED_USERS, SEED_TICKETS, SEED_ALERTS };

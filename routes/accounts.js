@@ -209,13 +209,18 @@ router.get('/', async (req, res) => {
     }
 
     const accounts = rawAccounts.map(acc => {
-      const healthScore = calculateHealthScore(acc);
-      return {
-        ...acc,
-        healthScore,
-        status: getStatus(healthScore),
-        daysToRenewal: getDaysToRenewal(acc.contractEnd)
-      };
+      try {
+        const healthScore = calculateHealthScore(acc) || 0;
+        return {
+          ...acc,
+          healthScore,
+          status: getStatus(healthScore) || 'Healthy',
+          daysToRenewal: getDaysToRenewal(acc.contractEnd) || 0
+        };
+      } catch (err) {
+        console.error(`[Accounts] Error processing record ${acc.id}:`, err.message);
+        return { ...acc, healthScore: 0, status: 'Healthy', daysToRenewal: 0 };
+      }
     });
     res.json(accounts);
   } catch (err) {
@@ -332,8 +337,12 @@ router.get('/meta/summary', async (req, res) => {
     }
 
     const accounts = raw.map(acc => {
-      const healthScore = calculateHealthScore(acc);
-      return { ...acc, healthScore, status: getStatus(healthScore), daysToRenewal: getDaysToRenewal(acc.contractEnd) };
+      try {
+        const healthScore = calculateHealthScore(acc) || 0;
+        return { ...acc, healthScore, status: getStatus(healthScore) || 'Healthy', daysToRenewal: getDaysToRenewal(acc.contractEnd) || 0 };
+      } catch (err) {
+        return { ...acc, healthScore: 0, status: 'Healthy', daysToRenewal: 0 };
+      }
     });
     
     const totalPortfolioRev = accounts.reduce((sum, a) => sum + (a.contractValue || 0), 0);

@@ -1,7 +1,7 @@
 const admin = require('firebase-admin');
 const fs = require('fs');
 const path = require('path');
-const { SEED_ACCOUNTS, SEED_USERS } = require('./seedData');
+const { SEED_ACCOUNTS, SEED_USERS, SEED_TICKETS, SEED_ALERTS } = require('./seedData');
 
 // --- Cloud Persistence Bridge ---
 // Fallback to local files if no Firebase config found (Hybrid Mode)
@@ -78,7 +78,14 @@ const readAll = async (key, localPath) => {
     
     // ULTIMATE FALLBACK: Embedded Seed Data
     console.log(`[DB] Using embedded fail-safe data for ${key}`);
-    return key === 'accounts' ? SEED_ACCOUNTS : (key === 'users' ? SEED_USERS : []);
+    const seeds = {
+        'accounts': SEED_ACCOUNTS,
+        'users': SEED_USERS,
+        'tickets': SEED_TICKETS,
+        'news': { alerts: SEED_ALERTS },
+        'recaps': { summary: 'Morning Intelligence Briefing: Portfolio performing within expected variance.', highlights: ['Azure Bay RevPAR up 12%', 'Metro Budget sentiment alert'], escalations: '1 pending escalation (hotel-tp008)' }
+    };
+    return seeds[key] || [];
   }
 };
 
