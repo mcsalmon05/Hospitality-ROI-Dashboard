@@ -33,13 +33,13 @@ const fetchAllUsers = async () => {
 };
 
 // --- AUTH ---
-router.post('/login', async (req, res) => {
+router.post('/auth/login', async (req, res) => {
   const { email, password } = req.body;
   const users = await fetchAllUsers();
   const parsedEmail = (email || '').trim().toLowerCase();
   
   if (parsedEmail === 'admin@csm.local' && password === 'admin') {
-     const token = jwt.sign({ id: 'u-admin', role: 'admin', accountIds: [] }, JWT_SECRET, { expiresIn: '7d' });
+     const token = jwt.sign({ id: 'u-admin', role: 'admin' }, JWT_SECRET, { expiresIn: '7d' });
      return res.json({ token, role: 'admin' });
   }
 
@@ -76,7 +76,7 @@ const adminMiddleware = (req, res, next) => {
 };
 
 // GET all users (Admins only)
-router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
+router.get('/users', authMiddleware, adminMiddleware, async (req, res) => {
   const users = await fetchAllUsers();
   res.json(users.map(u => ({ 
     id: u.id, 
@@ -87,15 +87,13 @@ router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
   })));
 });
 
-// Handle / (POST) for user/partner registration
-router.post('/', authMiddleware, adminMiddleware, registerUser);
-router.post('', authMiddleware, adminMiddleware, registerUser);
-
-async function registerUser(req, res) {
+// Create new user/partner portfolio
+router.post('/users', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     let { email, password, name, role, partnerTag } = req.body;
     const users = await fetchAllUsers();
     
+    // Check for existing email ONLY if email is provided
     if (email && email.trim() !== '') {
       const parsedEmail = email.trim().toLowerCase();
       if (users.find(u => (u.email || '').toLowerCase() === parsedEmail)) {
@@ -103,6 +101,7 @@ async function registerUser(req, res) {
       }
     }
 
+    // Default password for login-less accounts
     const passwordToHash = (password && password.trim() !== '') ? password : `DISABLED_${uuidv4().split('-')[0]}`;
     const hash = await bcrypt.hash(passwordToHash, 10);
     
@@ -123,9 +122,9 @@ async function registerUser(req, res) {
   } catch(e) {
     res.status(500).json({ error: e.message });
   }
-}
+});
 
-router.put('/password', authMiddleware, async (req, res) => {
+router.put('/users/password', authMiddleware, async (req, res) => {
   try {
     const { newPassword } = req.body;
     const users = await fetchAllUsers();

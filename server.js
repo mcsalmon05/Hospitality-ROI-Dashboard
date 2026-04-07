@@ -58,13 +58,11 @@ const startDailyScheduler = () => {
   });
 };
 
-// ─── Authentication Gateway ────────────────────
-app.use('/api/users', usersRouter);
-app.use('/api/auth', usersRouter);
+// ─── API Router Gateway ────────────────────
+app.use('/api', usersRouter); // Handle /api/users, /api/auth/login, etc inside usersRouter
 
-// Global Protection for rest of /api
+// Protection for everything else under /api (Catch-all)
 app.use('/api', (req, res, next) => {
-  // Routes already handled by usersRouter don't need this catch-all
   authMiddleware(req, res, next);
 });
 
