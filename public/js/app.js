@@ -244,14 +244,14 @@ window.App = {
       App.toast('Password updated successfully', 'success');
       document.getElementById('form-password-reset').reset();
     } catch (err) {
-      App.toast(err.message, 'error');
+      this.toast(err.message, 'error');
     } finally {
       btn.textContent = og;
       btn.disabled = false;
     }
   },
 
-  navigate(view) {
+  async navigate(view) {
     // Update nav
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     const navEl = document.getElementById(`nav-${view}`);
@@ -264,7 +264,7 @@ window.App = {
 
     this.currentView = view;
 
-    // Update header
+    // Update Header
     const titles = {
       dashboard: { title: 'Dashboard', subtitle: 'Global Partner Portfolio ROI & Performance' },
       accounts: { title: 'Partner Portfolios', subtitle: 'Active hospitality client performance by partner' },
@@ -276,22 +276,34 @@ window.App = {
       settings: { title: 'Platform Settings', subtitle: 'Security and partner access management' }
     };
     const meta = titles[view] || { title: view, subtitle: '' };
+    
+    // Dynamic subtitle for dashboard
+    if (view === 'dashboard' && window.currentPartnerTag) {
+        const select = document.getElementById('global-project-filter');
+        const option = select?.options[select.selectedIndex];
+        if (option && window.currentPartnerTag !== 'all') {
+            meta.subtitle = `${option.text} Performance Portfolio Metrics`;
+        }
+    }
+
     document.getElementById('page-title').textContent = meta.title;
     document.getElementById('page-subtitle').textContent = meta.subtitle;
 
     // Lazy-load view content
     try {
         switch(view) {
-          case 'accounts':    Accounts.load(); break;
-          case 'triage':      Triage.load(); break;
-          case 'tickets':     Tickets.load(); break;
-          case 'renewals':    Renewals.load(); break;
-          case 'intelligence': Intelligence.load(); break;
-          case 'data':        this.loadDataHub(); break;
+          case 'dashboard':    await Dashboard.init(); break;
+          case 'accounts':     await Accounts.load(); break;
+          case 'triage':       await Triage.load(); break;
+          case 'tickets':      await Tickets.load(); break;
+          case 'renewals':     await Renewals.load(); break;
+          case 'intelligence': await Intelligence.load(); break;
+          case 'data':         await this.loadDataHub(); break;
+          case 'settings':     await this.loadSettings(); break;
         }
     } catch (err) {
         console.error(`[App] Navigation Error for ${view}:`, err);
-        App.toast(`Module Error: ${view} could not be initialized`, 'error');
+        this.toast(`Module Error: ${view} could not be initialized`, 'error');
     }
   },
 
