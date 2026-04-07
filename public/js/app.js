@@ -1,16 +1,92 @@
 /* ═══════════════════════════════════════════════════════════════
    APP.JS — Core App Shell, Navigation, Toast, Utilities
    ═══════════════════════════════════════════════════════════════ */
-const API = 'http://localhost:3000/api';
+const API = '/api';
+
+const originalFetch = window.fetch;
+window.fetch = async function() {
+  let [resource, config] = arguments;
+  if (!config) config = {};
+  if (!config.headers) config.headers = {};
+  
+  const token = localStorage.getItem('csm_token');
+  if (token) {
+    if (config.headers instanceof Headers) {
+      config.headers.set('Authorization', `Bearer ${token}`);
+    } else {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+  
+  const res = await originalFetch(resource, config);
+  if (res.status === 401 && (!resource || !resource.toString().includes('/auth/login'))) {
+    App.showLogin();
+  }
+  return res;
+};
 
 window.App = {
   currentView: 'dashboard',
 
   async init() {
-    this.setupNavigation();
-    this.setupSearch();
-    await this.loadBadges();
-    await Dashboard.init();
+    if (!localStorage.getItem('csm_token')) {
+      this.showLogin();
+    } else {
+      this.showApp();
+      this.setupNavigation();
+      this.setupSearch();
+      await this.loadBadges();
+      await Dashboard.init();
+    }
+  },
+
+  showLogin() {
+    document.getElementById('app-container').style.opacity = '0';
+    document.getElementById('app-container').style.visibility = 'hidden';
+    document.getElementById('login-overlay').style.display = 'block';
+  },
+
+  showApp() {
+    document.getElementById('login-overlay').style.display = 'none';
+    const appContainer = document.getElementById('app-container');
+    appContainer.style.visibility = 'visible';
+    appContainer.style.opacity = '1';
+  },
+
+  async login(event) {
+    event.preventDefault();
+    const password = document.getElementById('login-password').value;
+    const btn = document.getElementById('login-btn');
+    const err = document.getElementById('login-error');
+    err.style.display = 'none';
+    btn.textContent = 'Authenticating...';
+    btn.disabled = true;
+
+    try {
+      const res = await originalFetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      const data = await res.json();
+      
+      if (res.ok && data.token) {
+        localStorage.setItem('csm_token', data.token);
+        this.showApp();
+        this.setupNavigation();
+        this.setupSearch();
+        await this.loadBadges();
+        await Dashboard.init();
+      } else {
+        throw new Error('Invalid credentials');
+      }
+    } catch(e) {
+      err.style.display = 'block';
+      err.textContent = 'Invalid credentials or server error';
+    } finally {
+      btn.textContent = 'Authenticate';
+      btn.disabled = false;
+    }
   },
 
   setupNavigation() {

@@ -11,6 +11,7 @@ const { runIntelligenceScrub } = require('./routes/news');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin'; // Default fallback
 
 // Middleware
 app.use(cors());
@@ -27,7 +28,10 @@ const startDailyScheduler = () => {
   cron.schedule('0 7 * * *', async () => {
     try {
       const fetch = require('node-fetch');
-      await fetch('http://localhost:3000/api/news/scrub', { method: 'POST' });
+      await fetch('http://localhost:3000/api/news/scrub', { 
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${Buffer.from(ADMIN_PASSWORD).toString('base64')}` }
+      });
       console.log('[Scheduler] 7:00 AM Scrub Complete.');
     } catch (err) {
       console.error('[Scheduler] 7:00 AM Scrub Failed:', err.message);
@@ -38,13 +42,36 @@ const startDailyScheduler = () => {
   cron.schedule('30 7 * * *', async () => {
     try {
       const fetch = require('node-fetch');
-      await fetch('http://localhost:3000/api/news/recap', { method: 'POST' });
+      await fetch('http://localhost:3000/api/news/recap', { 
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${Buffer.from(ADMIN_PASSWORD).toString('base64')}` }
+      });
       console.log('[Scheduler] 7:30 AM Recap Complete.');
     } catch (err) {
       console.error('[Scheduler] 7:30 AM Recap Failed:', err.message);
     }
   });
 };
+
+// ─── Authentication Gateway ────────────────────
+app.post('/api/auth/login', (req, res) => {
+  const { password } = req.body;
+  if (password === ADMIN_PASSWORD) {
+    res.json({ token: Buffer.from(password).toString('base64') });
+  } else {
+    res.status(401).json({ error: 'Invalid password' });
+  }
+});
+
+app.use('/api', (req, res, next) => {
+  if (req.path.startsWith('/auth')) return next();
+  
+  const authHeader = req.headers.authorization;
+  if (!authHeader || authHeader !== `Bearer ${Buffer.from(ADMIN_PASSWORD).toString('base64')}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+});
 
 // Routes
 app.use('/api/accounts', accountsRouter);
