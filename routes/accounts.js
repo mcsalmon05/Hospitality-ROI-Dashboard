@@ -193,8 +193,15 @@ router.get('/', (req, res) => {
     
     // Auth & Project Filter
     if (req.user && req.user.role !== 'admin') {
-      const allowed = req.user.accountIds || [];
-      rawAccounts = rawAccounts.filter(acc => allowed.includes(acc.id));
+      // Automatic Tag-based filtering
+      const partnerTag = req.user.partnerTag;
+      if (partnerTag) {
+        rawAccounts = rawAccounts.filter(acc => acc.partnerTag === partnerTag);
+      } else {
+        rawAccounts = []; // No tag = no access
+      }
+    } else if (req.query.partnerTag && req.query.partnerTag !== 'all') {
+      rawAccounts = rawAccounts.filter(acc => acc.partnerTag === req.query.partnerTag);
     } else if (req.query.projectId && req.query.projectId !== 'all') {
       const ids = req.query.projectId.split(',');
       rawAccounts = rawAccounts.filter(acc => ids.includes(acc.id));
@@ -310,8 +317,14 @@ router.get('/meta/summary', (req, res) => {
     
     // Auth & Project Filter
     if (req.user && req.user.role !== 'admin') {
-      const allowed = req.user.accountIds || [];
-      raw = raw.filter(acc => allowed.includes(acc.id));
+      const partnerTag = req.user.partnerTag;
+      if (partnerTag) {
+        raw = raw.filter(acc => acc.partnerTag === partnerTag);
+      } else {
+        raw = [];
+      }
+    } else if (req.query.partnerTag && req.query.partnerTag !== 'all') {
+      raw = raw.filter(acc => acc.partnerTag === req.query.partnerTag);
     } else if (req.query.projectId && req.query.projectId !== 'all') {
       const ids = req.query.projectId.split(',');
       raw = raw.filter(acc => ids.includes(acc.id));

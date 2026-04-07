@@ -19,9 +19,9 @@ window.fetch = async function() {
   }
 
   // Auto-apply project filter if set
-  if (window.currentProjectId && typeof resource === 'string' && resource.includes('/api/')) {
+  if (window.currentPartnerTag && typeof resource === 'string' && resource.includes('/api/')) {
     const separator = resource.includes('?') ? '&' : '?';
-    resource = `${resource}${separator}projectId=${window.currentProjectId}`;
+    resource = `${resource}${separator}partnerTag=${window.currentPartnerTag}`;
   }
   
   const res = await originalFetch(resource, config);
@@ -78,7 +78,6 @@ window.App = {
     } else {
       document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
       await this.loadPartnerSwitcher();
-      await this.loadAccountAssignmentList();
     }
   },
 
@@ -90,27 +89,41 @@ window.App = {
       const select = document.getElementById('global-project-filter');
       select.innerHTML = '<option value="all">Global Partner Overview</option>';
       partners.sort((a,b) => (a.name||a.email).localeCompare(b.name||b.email)).forEach(u => {
-        select.innerHTML += `<option value="${u.id}" data-accounts="${(u.accountIds || []).join(',')}">${u.name || u.email}</option>`;
+        select.innerHTML += `<option value="${u.id}" data-tag="${u.partnerTag || ''}">${u.name || u.email}</option>`;
       });
     } catch(e) {}
   },
 
-  async loadAccountAssignmentList() {
-    const list = document.getElementById('create-user-accounts-list');
+  async createUser(event) {
+    event.preventDefault();
+    const name = document.getElementById('create-user-name').value;
+    const email = document.getElementById('create-user-email').value;
+    const role = document.getElementById('create-user-role').value;
+    const password = document.getElementById('create-user-password').value;
+    const partnerTag = document.getElementById('create-user-partnertag').value;
+    
+    const btn = event.target.querySelector('button[type="submit"]');
+    const og = btn.textContent;
+    btn.textContent = 'Creating...';
+    btn.disabled = true;
+
     try {
-      const res = await fetch(`${API}/accounts`);
-      const accounts = await res.json();
-      list.innerHTML = accounts.map(acc => `
-        <label style="display: flex; align-items: center; gap: 8px; color: white; font-size: 0.8rem; cursor: pointer;">
-          <input type="checkbox" name="assign-account" value="${acc.id}" style="width: 14px; height: 14px;">
-          <span>${acc.name}</span>
-        </label>
-      `).join('');
-    } catch (e) {
-      list.innerHTML = '<p style="color:var(--accent-red); font-size:0.75rem;">Error loading properties</p>';
+      const res = await fetch(`${API}/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, role, password, partnerTag })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create user');
+      App.toast(`Partner ${name} provisioned!`, 'success');
+      document.getElementById('form-create-user').reset();
+    } catch (err) {
+      App.toast(err.message, 'error');
+    } finally {
+      btn.textContent = og;
+      btn.disabled = false;
     }
   },
-
   async handlePartnerSwitch(userId) {
     const select = document.getElementById('global-project-filter');
     const option = select.options[select.selectedIndex];
@@ -118,18 +131,18 @@ window.App = {
     if (userId === 'all') {
       console.log('[Partner Switcher] Showing total portfolio');
       window.currentPartnerId = null;
-      window.currentPartnerAccounts = null;
+      window.currentPartnerTag = null;
     } else {
-      const accountIds = option.dataset.accounts ? option.dataset.accounts.split(',') : [];
-      console.log(`[Partner Switcher] Filtering to partner: ${userId} (${accountIds.length} properties)`);
+      const partnerTag = option.dataset.tag;
+      console.log(`[Partner Switcher] Filtering to partner: ${userId} (Tag: ${partnerTag})`);
       window.currentPartnerId = userId;
-      window.currentPartnerAccounts = accountIds;
+      window.currentPartnerTag = partnerTag;
     }
     
     // Refresh the dashboard and other views
     await Dashboard.init();
-    if (this.currentView === 'accounts') await Accounts.init();
-    if (this.currentView === 'triage') await Triage.init();
+    if (this.currentView === 'accounts') await Accounts.load();
+    if (this.currentView === 'triage') await Triage.load();
     
     this.toast(userId === 'all' ? 'Showing Total Portfolio' : `Viewing ${option.text} Portfolio`, 'info');
   },

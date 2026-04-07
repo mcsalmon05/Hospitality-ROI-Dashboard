@@ -346,15 +346,23 @@ window.Accounts = {
     document.getElementById('account-modal-overlay').classList.remove('active');
   },
 
-  showAddModal() {
+  async showAddModal() {
     const overlay = document.getElementById('account-modal-overlay');
     const content = document.getElementById('account-modal-content');
     overlay.classList.add('active');
 
+    // Fetch partners first
+    let partnerOptions = '<option value="">No Partner (Orphan)</option>';
+    try {
+      const users = await fetch(`${API}/users`).then(r => r.json());
+      const partners = users.filter(u => u.role === 'client');
+      partnerOptions += partners.map(p => `<option value="${p.partnerTag}">${p.name || p.email}</option>`).join('');
+    } catch(e) {}
+
     content.innerHTML = `
       <div class="modal-header" style="margin-bottom: 24px;">
-        <div class="modal-account-name" style="font-size:1.5rem;">Add New Account</div>
-        <div class="modal-account-meta">Manually intake a new property</div>
+        <div class="modal-account-name" style="font-size:1.5rem;">Manual Property Intake</div>
+        <div class="modal-account-meta">Add a new client property to the portfolio</div>
       </div>
       <form id="add-account-form" onsubmit="Accounts.submitAddAccount(event)">
         <div class="modal-section">
@@ -365,8 +373,10 @@ window.Accounts = {
               <input type="text" name="name" class="search-input" style="width:100%; border:1px solid var(--border);" required />
             </div>
             <div>
-              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Domain / Website</label>
-              <input type="text" name="domain" class="search-input" style="width:100%; border:1px solid var(--border);" placeholder="e.g. example.com" />
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Partner Agency (Tagging) *</label>
+              <select name="partnerTag" class="select-sm" style="width:100%; border:1px solid var(--border); height:38px;" required>
+                ${partnerOptions}
+              </select>
             </div>
             <div>
               <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Industry / Type</label>

@@ -16,8 +16,14 @@ router.get('/overview', (req, res) => {
     
     // Auth filter
     if (req.user && req.user.role !== 'admin') {
-      const allowed = req.user.accountIds || [];
-      accounts = accounts.filter(acc => allowed.includes(acc.id));
+      const partnerTag = req.user.partnerTag;
+      if (partnerTag) {
+        accounts = accounts.filter(acc => acc.partnerTag === partnerTag);
+      } else {
+        accounts = [];
+      }
+    } else if (req.query.partnerTag && req.query.partnerTag !== 'all') {
+      accounts = accounts.filter(acc => acc.partnerTag === req.query.partnerTag);
     } else if (req.query.projectId && req.query.projectId !== 'all') {
       const ids = req.query.projectId.split(',');
       accounts = accounts.filter(acc => ids.includes(acc.id));
@@ -81,8 +87,14 @@ router.get('/triage', (req, res) => {
     
     // Auth filter
     if (req.user && req.user.role !== 'admin') {
-      const allowed = req.user.accountIds || [];
-      accounts = accounts.filter(acc => allowed.includes(acc.id));
+      const partnerTag = req.user.partnerTag;
+      if (partnerTag) {
+        accounts = accounts.filter(acc => acc.partnerTag === partnerTag);
+      } else {
+        accounts = [];
+      }
+    } else if (req.query.partnerTag && req.query.partnerTag !== 'all') {
+      accounts = accounts.filter(acc => acc.partnerTag === req.query.partnerTag);
     } else if (req.query.projectId && req.query.projectId !== 'all') {
       const ids = req.query.projectId.split(',');
       accounts = accounts.filter(acc => ids.includes(acc.id));
@@ -117,8 +129,14 @@ router.get('/renewals', (req, res) => {
     
     // Auth filter
     if (req.user && req.user.role !== 'admin') {
-      const allowed = req.user.accountIds || [];
-      accounts = accounts.filter(acc => allowed.includes(acc.id));
+      const partnerTag = req.user.partnerTag;
+      if (partnerTag) {
+        accounts = accounts.filter(acc => acc.partnerTag === partnerTag);
+      } else {
+        accounts = [];
+      }
+    } else if (req.query.partnerTag && req.query.partnerTag !== 'all') {
+      accounts = accounts.filter(acc => acc.partnerTag === req.query.partnerTag);
     } else if (req.query.projectId && req.query.projectId !== 'all') {
       const ids = req.query.projectId.split(',');
       accounts = accounts.filter(acc => ids.includes(acc.id));
