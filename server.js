@@ -64,19 +64,27 @@ const startDailyScheduler = () => {
 const seedDatabase = async () => {
   if (!isCloud) return;
   try {
+    console.log('[Cloud Seed] Verifying system integrity...');
     const existing = await readAll('accounts', path.join(__dirname, 'data/accounts.json'));
-    if (existing.length < 5) {
-      console.log('[Cloud Seed] Initializing Firestore with local seed data...');
+    
+    // Specifically check if Test Pilot properties are in Cloud
+    const hasTestPilot = existing.some(a => a.partnerTag === 'testpilot');
+    
+    if (!hasTestPilot || existing.length < 5) {
+      console.log('[Cloud Seed] Seeding Test Pilot portfolio to Firestore...');
       const localAcc = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/accounts.json'), 'utf8'));
-      for (const a of localAcc) await writeOne('accounts', a.id, a);
+      for (const a of localAcc) {
+        await writeOne('accounts', a.id, a);
+      }
       
       const localUsers = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/users.json'), 'utf8'));
-      for (const u of localUsers) await writeOne('users', u.id, u);
-      
-      console.log('[Cloud Seed] Success: 11 properties and partners provisioned.');
+      for (const u of localUsers) {
+        await writeOne('users', u.id, u);
+      }
+      console.log('[Cloud Seed] Seeding complete.');
     }
   } catch (err) {
-    console.error('[Cloud Seed] Failed:', err.message);
+    console.error('[Cloud Seed] Persistence error:', err.message);
   }
 };
 

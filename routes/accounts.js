@@ -8,18 +8,8 @@ const router = express.Router();
 const DATA_PATH = path.join(__dirname, '../data/accounts.json');
 
 // --- Updated Persistence: Google Firestore (Cloud) + JSON (Local) ---
-const readAccounts = () => {
-  try {
-    ensureDataDir(DATA_PATH);
-    if (!fs.existsSync(DATA_PATH)) {
-      fs.writeFileSync(DATA_PATH, '[]');
-      return [];
-    }
-    return JSON.parse(fs.readFileSync(DATA_PATH, 'utf8'));
-  } catch (e) {
-    console.error('[DB] Read error:', e.message);
-    return [];
-  }
+const readAccounts = async () => {
+  return await readAll('accounts', DATA_PATH);
 };
 
 const writeAccounts = async (accounts) => {
@@ -257,7 +247,7 @@ router.get('/:id', async (req, res) => {
 // POST create account
 router.post('/', async (req, res) => {
   try {
-    const accounts = readAccounts();
+    const accounts = await readAccounts();
     const newAccount = {
       id: `acc-${uuidv4().split('-')[0]}`,
       ...req.body,
@@ -276,7 +266,7 @@ router.post('/', async (req, res) => {
 // PUT update account
 router.put('/:id', async (req, res) => {
   try {
-    const accounts = readAccounts();
+    const accounts = await readAccounts();
     const idx = accounts.findIndex(a => a.id === req.params.id);
     if (idx === -1) return res.status(404).json({ error: 'Account not found' });
     accounts[idx] = { ...accounts[idx], ...req.body, updatedAt: new Date().toISOString() };
@@ -289,9 +279,9 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE account
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
-    const accounts = readAccounts();
+    const accounts = await readAccounts();
     const filtered = accounts.filter(a => a.id !== req.params.id);
     if (filtered.length === accounts.length) return res.status(404).json({ error: 'Account not found' });
     writeAccounts(filtered);
@@ -306,7 +296,7 @@ router.post('/import/bulk', async (req, res) => {
   try {
     const { accounts: incoming } = req.body;
     if (!Array.isArray(incoming)) return res.status(400).json({ error: 'Expected array of accounts' });
-    const existing = readAccounts();
+    const existing = await readAccounts();
     const newOnes = incoming.map(acc => ({
       id: acc.id || `acc-${uuidv4().split('-')[0]}`,
       ...acc,
@@ -322,9 +312,9 @@ router.post('/import/bulk', async (req, res) => {
 });
 
 // GET summary stats (Hotel Portfolio ROI)
-router.get('/meta/summary', (req, res) => {
+router.get('/meta/summary', async (req, res) => {
   try {
-    let raw = readAccounts();
+    let raw = await readAccounts();
     
     // Auth & Project Filter
     if (req.user && req.user.role !== 'admin') {
@@ -402,7 +392,7 @@ router.post('/sync', async (req, res) => {
     }
 
     const payload = Array.isArray(importedData) ? importedData : [importedData];
-    const existing = readAccounts();
+    const existing = await readAccounts();
     const merged = [...existing];
 
     payload.forEach(n => {
@@ -414,7 +404,7 @@ router.post('/sync', async (req, res) => {
       }
     });
 
-    writeAccounts(merged);
+    await writeAccounts(merged);
     res.json({ success: true, count: payload.length });
   } catch (err) {
     console.error('[Sync] Error:', err.message);
