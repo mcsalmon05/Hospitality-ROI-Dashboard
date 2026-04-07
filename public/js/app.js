@@ -44,6 +44,7 @@ window.App = {
       this.setupNavigation();
       this.setupSearch();
       await this.loadBadges();
+      this.loadSettings();
       await Dashboard.init();
     }
   },
@@ -419,6 +420,36 @@ window.App = {
   // ─── Data Center Logic ───────────────────────────────────────
   async loadDataHub() {
     console.log('[App] Data Hub ready.');
+  },
+
+  async loadSettings() {
+    try {
+      const res = await fetch(`${API}/settings`);
+      const settings = await res.json();
+      const toggle = document.getElementById('settings-auto-scrub');
+      if (toggle) {
+        toggle.checked = settings.autoScrubEnabled || false;
+      }
+    } catch(e) { console.warn('[App] Failed to load settings'); }
+  },
+
+  async saveIntelligenceSettings() {
+    const toggle = document.getElementById('settings-auto-scrub');
+    if (!toggle) return;
+
+    try {
+      const res = await fetch(`${API}/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ autoScrubEnabled: toggle.checked })
+      });
+      if (!res.ok) throw new Error('Save failed');
+      this.toast(`Auto-Scrub ${toggle.checked ? 'Enabled' : 'Disabled'}`, 'success');
+    } catch(err) {
+      this.toast(`Failed to update settings: ${err.message}`, 'error');
+      // Rollback UI
+      toggle.checked = !toggle.checked;
+    }
   },
 
   downloadTemplate() {

@@ -2,6 +2,7 @@
   "appName": "CSM Intelligence Dashboard",
   "scrubSchedule": "daily",
   "scrubTime": "08:00",
+  "autoScrubEnabled": false,
   "alertThresholds": {
     "renewalWarningDays": 90,
     "renewalCriticalDays": 30,

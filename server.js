@@ -7,6 +7,7 @@ const accountsRouter = require('./routes/accounts');
 const ticketsRouter = require('./routes/tickets');
 const newsRouter = require('./routes/news');
 const healthRouter = require('./routes/health');
+const settingsRouter = require('./routes/settings');
 const { router: usersRouter, authMiddleware } = require('./routes/users');
 const { runIntelligenceScrub } = require('./routes/news');
 const { isCloud, readAll, writeOne } = require('./services/db');
@@ -30,7 +31,13 @@ const startDailyScheduler = () => {
   // 7:00 AM: Raw Data Scrub & News Scan
   cron.schedule('0 7 * * *', async () => {
     try {
+      // Check if auto-scrub is enabled
       const fetch = require('node-fetch');
+      const settings = await fetch(`http://localhost:${PORT}/api/settings`).then(r => r.json());
+      if (!settings.autoScrubEnabled) {
+        return console.log('[Scheduler] 7:00 AM: Skipping auto-scrub (Toggled OFF in settings).');
+      }
+
       const jwt = require('jsonwebtoken');
       const mockToken = jwt.sign({ id: 'system', role: 'admin' }, process.env.JWT_SECRET || 'secret123');
       await fetch(`http://localhost:${PORT}/api/news/scrub`, { 
@@ -46,7 +53,13 @@ const startDailyScheduler = () => {
   // 7:30 AM: Intelligence Recap Synthesis
   cron.schedule('30 7 * * *', async () => {
     try {
+      // Check if auto-scrub is enabled
       const fetch = require('node-fetch');
+      const settings = await fetch(`http://localhost:${PORT}/api/settings`).then(r => r.json());
+      if (!settings.autoScrubEnabled) {
+        return console.log('[Scheduler] 7:30 AM: Skipping auto-recap (Toggled OFF in settings).');
+      }
+
       const jwt = require('jsonwebtoken');
       const mockToken = jwt.sign({ id: 'system', role: 'admin' }, process.env.JWT_SECRET || 'secret123');
       await fetch(`http://localhost:${PORT}/api/news/recap`, { 
@@ -110,6 +123,7 @@ app.use('/api/accounts', accountsRouter);
 app.use('/api/tickets', ticketsRouter);
 app.use('/api/news', newsRouter);
 app.use('/api/health', healthRouter);
+app.use('/api/settings', settingsRouter);
 
 // Serve UI
 app.get('*', (req, res) => {

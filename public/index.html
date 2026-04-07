@@ -606,6 +606,25 @@
           </div>
         </form>
       </div>
+
+      <!-- Intelligence Scrub Settings -->
+      <div class="card admin-only" style="max-width: 600px; margin: 24px auto;">
+        <h3 style="margin-bottom: 24px; color: #fff;">Intelligence Configuration</h3>
+        <p style="color:var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">Control the automated scanning of property news and performance signals.</p>
+        
+        <div style="padding:16px; background:rgba(255,255,255,0.03); border-radius:12px; border:1px solid var(--border);">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div style="font-weight:600; color:#fff; margin-bottom:4px;">Automated Daily Intelligence Scrub</div>
+              <div style="font-size:0.75rem; color:var(--text-secondary);">Run property-level performance and news scans automatically at 7:00 AM.</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="settings-auto-scrub" onchange="App.saveIntelligenceSettings()">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 
