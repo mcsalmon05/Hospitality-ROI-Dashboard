@@ -326,7 +326,7 @@ router.post('/sync', async (req, res) => {
   if (!url) return res.status(400).json({ error: 'Data Source URL is required' });
 
   try {
-    const fetch = (await import('node-fetch')).default;
+    const fetch = require('node-fetch');
     const response = await fetch(url);
     if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
     
