@@ -85,23 +85,37 @@ const seedDatabase = async () => {
     // Ensure data directory exists locally
     if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 
+    console.log(`[Seed] Checking database state... (Cloud: ${isCloud})`);
+
     // Check cloud (or local fallback) for existing properties
-    const existing = await readAll('accounts', accPath);
-    const hasTestPilot = existing.some(a => a.partnerTag === 'testpilot');
+    const existingAccounts = await readAll('accounts', accPath);
+    const existingTickets = await readAll('tickets', ticketsPath);
     
-    if (!hasTestPilot || existing.length < 5) {
+    const hasTestPilot = existingAccounts.some(a => a.partnerTag === 'testpilot');
+    const needsSeeding = !hasTestPilot || existingAccounts.length < 5 || existingTickets.length === 0;
+
+    if (needsSeeding) {
       console.log('[Seed] Initializing missing database items with FAIL-SAFE embedded data...');
       
       const { SEED_TICKETS, SEED_ALERTS } = require('./services/seedData');
       
       // 1. Initialize strictly to Local File System 
-      fs.writeFileSync(accPath, JSON.stringify(SEED_ACCOUNTS, null, 2));
-      fs.writeFileSync(usersPath, JSON.stringify(SEED_USERS, null, 2));
-      fs.writeFileSync(ticketsPath, JSON.stringify(SEED_TICKETS, null, 2));
-      fs.writeFileSync(newsPath, JSON.stringify({ alerts: SEED_ALERTS }, null, 2));
+      if (!fs.existsSync(accPath) || existingAccounts.length < 5) {
+        fs.writeFileSync(accPath, JSON.stringify(SEED_ACCOUNTS, null, 2));
+      }
+      if (!fs.existsSync(usersPath) || (await readAll('users', usersPath)).length < 3) {
+        fs.writeFileSync(usersPath, JSON.stringify(SEED_USERS, null, 2));
+      }
+      if (!fs.existsSync(ticketsPath) || existingTickets.length === 0) {
+        fs.writeFileSync(ticketsPath, JSON.stringify(SEED_TICKETS, null, 2));
+      }
+      if (!fs.existsSync(newsPath)) {
+        fs.writeFileSync(newsPath, JSON.stringify({ alerts: SEED_ALERTS }, null, 2));
+      }
       
       // 2. Push to Cloud (if active deployment)
       if (isCloud) {
+        console.log('[Seed] Mirroring seed data to Google Firestore...');
         // Parallelizing pushes for speed and robustness
         await Promise.all([
           ...SEED_ACCOUNTS.map(a => writeOne('accounts', a.id, a)),
@@ -112,6 +126,8 @@ const seedDatabase = async () => {
       }
       
       console.log('[Seed] Provisioning complete: Accounts, Users, Tickets, and Alerts live.');
+    } else {
+      console.log(`[Seed] Database already contains ${existingAccounts.length} accounts and ${existingTickets.length} tickets. Skipping seed.`);
     }
   } catch (err) {
     console.error('[Seed] Persistence error:', err.message);
