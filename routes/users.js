@@ -89,34 +89,49 @@ const adminMiddleware = (req, res, next) => {
   next();
 };
 
-// --- USER MANAGEMENT ---
+// GET all users (Admins only)
 router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
   const users = await fetchAllUsers();
-  res.json(users.map(u => ({ id: u.id, email: u.email, name: u.name, role: u.role, accountIds: u.accountIds })));
+  res.json(users.map(u => ({ 
+    id: u.id, 
+    email: u.email || 'No login provisioned', 
+    name: u.name || 'Private Partner', 
+    role: u.role, 
+    partnerTag: u.partnerTag 
+  })));
 });
 
 router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
   try {
-    const { email, password, name, role, accountIds } = req.body;
+    let { email, password, name, role, partnerTag } = req.body;
     const users = await fetchAllUsers();
-    if (users.find(u => u.email === email)) return res.status(400).json({ error: 'Email already exists' });
     
-    const hash = await bcrypt.hash(password, 10);
+    // Check for existing email ONLY if email is provided
+    if (email && email.trim() !== '') {
+      const parsedEmail = email.trim().toLowerCase();
+      if (users.find(u => (u.email || '').toLowerCase() === parsedEmail)) {
+        return res.status(400).json({ error: 'Email already exists in system' });
+      }
+    }
+
+    // Default password for login-less accounts
+    const passwordToHash = (password && password.trim() !== '') ? password : `DISABLED_${uuidv4().split('-')[0]}`;
+    const hash = await bcrypt.hash(passwordToHash, 10);
+    
     const newUser = {
       id: `u-${uuidv4().split('-')[0]}`,
-      email,
-      name,
+      email: email || null,
+      name: name || partnerTag || 'Unnamed Partner',
       password: hash,
       role: role || 'client',
-      accountIds: accountIds || []
+      partnerTag: partnerTag || null,
+      createdAt: new Date().toISOString()
     };
     
     users.push(newUser);
-    // Write local
     writeUsers(users);
-    // Write cloud
     await writeOne('users', newUser.id, newUser);
-    res.json({ success: true });
+    res.json({ success: true, id: newUser.id });
   } catch(e) {
     res.status(500).json({ error: e.message });
   }
