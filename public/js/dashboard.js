@@ -205,19 +205,25 @@ window.Dashboard = {
   async loadIntelPreview() {
     const el = document.getElementById('intel-preview-list');
     try {
-      const data = await fetch(`${API}/news/alerts?dismissed=false`).then(r => r.json());
-      const alerts = (data.alerts || []).filter(a => a.level === 'critical' || a.level === 'high').slice(0, 4);
+      const res = await fetch(`${API}/news/alerts?dismissed=false`);
+      const data = await res.json();
       
+      const alerts = (data.alerts || []).filter(a => a.level === 'critical' || a.level === 'high').slice(0, 4);
       if (!alerts.length) {
         el.innerHTML = `<div class="empty-state-sm">No active alerts — run a scrub to monitor accounts</div>`;
         return;
       }
 
       el.innerHTML = alerts.map(a => `
-        <div class="intel-preview-item" onclick="App.navigate('intelligence')">
+        <div class="intel-preview-item" onclick="App.navigate('intelligence')" style="position:relative;">
           <span class="intel-preview-item-icon">${App.getLevelIcon(a.level)}</span>
           <div class="intel-preview-item-body">
-            <span class="intel-preview-account">${a.accountName}</span>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span class="intel-preview-account">${a.accountName}</span>
+              ${(window.currentPartnerTag === null || window.currentPartnerTag === 'all') ? `
+                 <span style="font-size:0.6rem; color:${a.partnerTag === 'testpilot' ? '#3b82f6' : '#8b5cf6'}; font-weight:700;">${a.partnerName}</span>
+              ` : ''}
+            </div>
             <span>${a.title.substring(0, 80)}${a.title.length > 80 ? '...' : ''}</span>
           </div>
         </div>`).join('');

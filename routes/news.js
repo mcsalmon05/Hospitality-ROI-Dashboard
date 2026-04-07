@@ -176,17 +176,27 @@ router.get('/alerts', async (req, res) => {
     }
     
     // Auth filtering for intelligence (Crucial for multi-tenant safety)
+    const accounts = await readAll('accounts', ACCOUNTS_PATH);
+    
     if (req.user && req.user.role !== 'admin') {
       const pTag = req.user.partnerTag;
-      const accounts = await readAll('accounts', ACCOUNTS_PATH);
       const myAccountIds = accounts.filter(acc => acc.partnerTag === pTag).map(acc => acc.id);
       alerts = alerts.filter(a => myAccountIds.includes(a.accountId));
-    } else if (req.query.partnerTag && req.query.partnerTag !== 'all') {
+    } else if (req.query.partnerTag && req.query.partnerTag !== 'all' && req.query.partnerTag !== '') {
       const pTag = req.query.partnerTag;
-      const accounts = await readAll('accounts', ACCOUNTS_PATH);
       const myAccountIds = accounts.filter(acc => acc.partnerTag === pTag).map(acc => acc.id);
       alerts = alerts.filter(a => myAccountIds.includes(a.accountId));
     }
+
+    // Enrichment: Add partner name so admin can see who it's for in global dashboard
+    alerts = alerts.map(a => {
+      const acc = accounts.find(acc => acc.id === a.accountId);
+      return {
+        ...a,
+        partnerTag: acc?.partnerTag || 'internal',
+        partnerName: acc?.partnerTag === 'testpilot' ? 'Test Pilot' : acc?.partnerTag === 'testclient2' ? 'Test Client 2' : 'Global'
+      };
+    });
 
     res.json({
       alerts,

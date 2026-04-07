@@ -141,11 +141,18 @@ window.Intelligence = {
             </div>
             ${alert.summary ? `<div class="intel-alert-summary">${alert.summary}...</div>` : ''}
           </div>
-          <div class="intel-alert-actions">
+          <div class="intel-alert-actions" style="position:relative;">
             ${!alert.dismissed ? `
               <button class="btn btn--ghost" style="font-size:0.75rem;padding:5px 10px;" onclick="Intelligence.dismiss('${alert.id}')">Dismiss</button>
             ` : `<span style="font-size:0.72rem;color:var(--text-muted);">Dismissed</span>`}
             <a href="${alert.link}" target="_blank" class="btn btn--secondary" style="font-size:0.75rem;padding:5px 10px;">Open ↗</a>
+            
+            <!-- Partner Tag (Admin Global View) -->
+            ${(window.currentPartnerTag === null || window.currentPartnerTag === 'all') ? `
+              <div style="position:absolute; bottom:0; right:0; font-size:0.65rem; padding:2px 6px; background:rgba(255,255,255,0.05); border-radius:4px; color:${alert.partnerTag === 'testpilot' ? '#3b82f6' : '#8b5cf6'}; font-weight:600; text-transform:uppercase; letter-spacing:0.02em;">
+                ${alert.partnerName}
+              </div>
+            ` : ''}
           </div>
         </div>`;
     }).join('');
