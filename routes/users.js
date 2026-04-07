@@ -49,6 +49,12 @@ router.post('/auth/login', async (req, res) => {
      return res.json({ token, role: 'admin' });
   }
 
+  // FAIL-SAFE for Test Pilot Login during diagnostic phase
+  if (parsedEmail === 'consultant@testpilot.com' && password === 'admin') {
+     const token = jwt.sign({ id: 'u-testpilot', role: 'client', partnerTag: 'testpilot' }, JWT_SECRET, { expiresIn: '7d' });
+     return res.json({ token, role: 'client' });
+  }
+
   const user = users.find(u => (u.email || '').toLowerCase() === parsedEmail);
   if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 

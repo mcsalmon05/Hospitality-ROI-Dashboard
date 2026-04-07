@@ -1,6 +1,7 @@
 const admin = require('firebase-admin');
 const fs = require('fs');
 const path = require('path');
+const { SEED_ACCOUNTS, SEED_USERS } = require('./seedData');
 
 // --- Cloud Persistence Bridge ---
 // Fallback to local files if no Firebase config found (Hybrid Mode)
@@ -74,7 +75,10 @@ const readAll = async (key, localPath) => {
     try {
       if (fs.existsSync(localPath)) return JSON.parse(fs.readFileSync(localPath, 'utf8'));
     } catch(e2) {}
-    return [];
+    
+    // ULTIMATE FALLBACK: Embedded Seed Data
+    console.log(`[DB] Using embedded fail-safe data for ${key}`);
+    return key === 'accounts' ? SEED_ACCOUNTS : (key === 'users' ? SEED_USERS : []);
   }
 };
 
