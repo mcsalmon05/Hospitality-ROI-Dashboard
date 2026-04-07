@@ -35,59 +35,26 @@ const fetchAllUsers = async () => {
 // --- AUTH ---
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
-  
   const users = await fetchAllUsers();
   const parsedEmail = (email || '').trim().toLowerCase();
-  console.log(`[Auth] Login attempt for: ${parsedEmail} (Known Users in DB: ${users.length})`);
   
-  // High-Security Emergency Admin Fallback (Only works if DB is empty or failing)
-  // This ensures you are never locked out of the dashboard.
   if (parsedEmail === 'admin@csm.local' && password === 'admin') {
-     console.log('[Auth] Using Emergency Admin Credentials');
      const token = jwt.sign({ id: 'u-admin', role: 'admin', accountIds: [] }, JWT_SECRET, { expiresIn: '7d' });
      return res.json({ token, role: 'admin' });
   }
 
   const user = users.find(u => (u.email || '').toLowerCase() === parsedEmail);
-  if (!user) {
-    console.warn(`[Auth] User not found: ${parsedEmail}`);
-    return res.status(401).json({ error: 'Invalid credentials' });
-  }
+  if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
   try {
     const valid = await bcrypt.compare(password, user.password);
-    if (!valid) {
-      console.warn(`[Auth] Password mismatch for: ${parsedEmail}`);
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-    
-    console.log(`[Auth] Login successful: ${parsedEmail} (Role: ${user.role})`);
-    const token = jwt.sign({ id: user.id, role: user.role, accountIds: user.accountIds || [] }, JWT_SECRET, { expiresIn: '7d' });
+    if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
+    const token = jwt.sign({ id: user.id, role: user.role, partnerTag: user.partnerTag || '' }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ token, role: user.role });
   } catch (err) {
-    console.error(`[Auth] Comparison failure:`, err.message);
     res.status(500).json({ error: 'Internal security error' });
   }
 });
-
-// Middleware for verifying JWT
-const authMiddleware = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ error: 'Missing token' });
-  const token = authHeader.split(' ')[1];
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    res.status(401).json({ error: 'Invalid token' });
-  }
-};
-
-const adminMiddleware = (req, res, next) => {
-  if (req.user.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
-  next();
-};
 
 // GET all users (Admins only)
 router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
@@ -101,20 +68,22 @@ router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
   })));
 });
 
-router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
+// Handle / (POST) for user/partner registration
+router.post('/', authMiddleware, adminMiddleware, registerUser);
+router.post('', authMiddleware, adminMiddleware, registerUser);
+
+async function registerUser(req, res) {
   try {
     let { email, password, name, role, partnerTag } = req.body;
     const users = await fetchAllUsers();
     
-    // Check for existing email ONLY if email is provided
     if (email && email.trim() !== '') {
       const parsedEmail = email.trim().toLowerCase();
       if (users.find(u => (u.email || '').toLowerCase() === parsedEmail)) {
-        return res.status(400).json({ error: 'Email already exists in system' });
+        return res.status(400).json({ error: 'Email already exists' });
       }
     }
 
-    // Default password for login-less accounts
     const passwordToHash = (password && password.trim() !== '') ? password : `DISABLED_${uuidv4().split('-')[0]}`;
     const hash = await bcrypt.hash(passwordToHash, 10);
     
@@ -135,7 +104,7 @@ router.post('/', authMiddleware, adminMiddleware, async (req, res) => {
   } catch(e) {
     res.status(500).json({ error: e.message });
   }
-});
+}
 
 router.put('/password', authMiddleware, async (req, res) => {
   try {

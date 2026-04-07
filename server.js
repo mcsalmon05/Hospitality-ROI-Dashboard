@@ -60,9 +60,11 @@ const startDailyScheduler = () => {
 
 // ─── Authentication Gateway ────────────────────
 app.use('/api/users', usersRouter);
-app.use('/api/auth', usersRouter); // Forward to the router where POST /login is defined
+app.use('/api/auth', usersRouter);
+
+// Global Protection for rest of /api
 app.use('/api', (req, res, next) => {
-  if (req.path.startsWith('/auth') || req.path.startsWith('/users/login')) return next();
+  // Routes already handled by usersRouter don't need this catch-all
   authMiddleware(req, res, next);
 });
 
