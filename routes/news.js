@@ -181,6 +181,11 @@ router.get('/alerts', async (req, res) => {
       const accounts = await readAll('accounts', ACCOUNTS_PATH);
       const myAccountIds = accounts.filter(acc => acc.partnerTag === pTag).map(acc => acc.id);
       alerts = alerts.filter(a => myAccountIds.includes(a.accountId));
+    } else if (req.query.partnerTag && req.query.partnerTag !== 'all') {
+      const pTag = req.query.partnerTag;
+      const accounts = await readAll('accounts', ACCOUNTS_PATH);
+      const myAccountIds = accounts.filter(acc => acc.partnerTag === pTag).map(acc => acc.id);
+      alerts = alerts.filter(a => myAccountIds.includes(a.accountId));
     }
 
     res.json({

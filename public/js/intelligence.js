@@ -7,6 +7,15 @@ window.Intelligence = {
   accountFilter: 'all',
 
   async load() {
+    this.accountFilter = 'all';
+    this.levelFilter = 'all';
+    
+    // Reset GUI selects to visually match DOM
+    const accSel = document.getElementById('intel-account-filter');
+    const lvlSel = document.getElementById('intel-level-filter');
+    if (accSel) accSel.value = 'all';
+    if (lvlSel) lvlSel.value = 'all';
+
     try {
       const [data, accounts] = await Promise.all([
         fetch(`${API}/news/alerts`).then(r => r.json()),
