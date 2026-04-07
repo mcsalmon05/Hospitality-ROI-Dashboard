@@ -347,7 +347,118 @@ window.Accounts = {
   },
 
   showAddModal() {
-    App.toast('Account creation form coming soon!', 'info');
+    const overlay = document.getElementById('account-modal-overlay');
+    const content = document.getElementById('account-modal-content');
+    overlay.classList.add('active');
+
+    content.innerHTML = `
+      <div class="modal-header" style="margin-bottom: 24px;">
+        <div class="modal-account-name" style="font-size:1.5rem;">Add New Account</div>
+        <div class="modal-account-meta">Manually intake a new property</div>
+      </div>
+      <form id="add-account-form" onsubmit="Accounts.submitAddAccount(event)">
+        <div class="modal-section">
+          <div class="modal-section-title">Property Details</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Property Name *</label>
+              <input type="text" name="name" class="search-input" style="width:100%; border:1px solid var(--border);" required />
+            </div>
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Domain / Website</label>
+              <input type="text" name="domain" class="search-input" style="width:100%; border:1px solid var(--border);" placeholder="e.g. example.com" />
+            </div>
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Industry / Type</label>
+              <input type="text" name="industry" class="search-input" style="width:100%; border:1px solid var(--border);" placeholder="Resort, Boutique, etc." />
+            </div>
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Total Keys / Rooms</label>
+              <input type="number" name="totalRooms" class="search-input" style="width:100%; border:1px solid var(--border);" placeholder="e.g. 150" />
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-section">
+          <div class="modal-section-title">Contract & Ownership</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Assigned CSM</label>
+              <input type="text" name="csm" class="search-input" style="width:100%; border:1px solid var(--border);" />
+            </div>
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Tier</label>
+              <select name="tier" class="select-sm" style="width:100%; border:1px solid var(--border); height:38px;">
+                <option value="Enterprise">Enterprise</option>
+                <option value="Mid-Market">Mid-Market</option>
+                <option value="SMB">SMB</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Contract MRR ($) *</label>
+              <input type="number" name="contractValue" class="search-input" style="width:100%; border:1px solid var(--border);" required placeholder="0" />
+            </div>
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Renewal Date *</label>
+              <input type="date" name="contractEnd" class="search-input" style="width:100%; border:1px solid var(--border);" required />
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+          <button type="button" class="btn btn--ghost" onclick="Accounts.closeModal()">Cancel</button>
+          <button type="submit" class="btn btn--primary">Create Account</button>
+        </div>
+      </form>
+    `;
+  },
+
+  async submitAddAccount(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Parse numbers
+    if (data.contractValue) data.contractValue = Number(data.contractValue);
+    if (data.totalRooms) data.totalRooms = Number(data.totalRooms);
+
+    // Initial default properties
+    data.occupancyPct = 0;
+    data.revPar = 0;
+    data.directBookingPct = 0;
+    data.adr = 0;
+    data.reviewScore = 5.0;
+    data.paymentStatus = 'good';
+    data.featureAdoptionScore = 0;
+    data.openTickets = 0;
+    data.escalatedTickets = 0;
+
+    const btn = event.target.querySelector('button[type="submit"]');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = 'Creating...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`${API}/accounts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      if (!res.ok) throw new Error('Failed to create account');
+      
+      App.toast('Account successfully created', 'success');
+      Accounts.closeModal();
+      
+      // Refresh grids
+      await Accounts.load();
+      if (window.Dashboard && document.getElementById('view-dashboard').classList.contains('active')) {
+        Dashboard.load();
+      }
+    } catch(e) {
+      App.toast(e.message, 'error');
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    }
   }
 };
 
