@@ -21,46 +21,51 @@ app.use(express.static(path.join(__dirname, 'public')));
 const startDailyScheduler = () => {
   console.log('[Scheduler] Automating 7:00 AM Intelligence & Performance Scrub...');
   
+  if (!cron) return console.warn('⚠️ node-cron not available for scheduler.');
+
+  // 7:00 AM: Raw Data Scrub & News Scan
   cron.schedule('0 7 * * *', async () => {
-    console.log('[Scheduler] Running Automated 7:00 AM Daily Scrub...');
     try {
       const fetch = require('node-fetch');
-      // Perform News Scrub (Dual internal call) 
       await fetch('http://localhost:3000/api/news/scrub', { method: 'POST' });
-      console.log('[Scheduler] Daily Scrub Complete.');
+      console.log('[Scheduler] 7:00 AM Scrub Complete.');
     } catch (err) {
-      console.error('[Scheduler] Daily Scrub Failed:', err.message);
+      console.error('[Scheduler] 7:00 AM Scrub Failed:', err.message);
     }
   });
 
+  // 7:30 AM: Intelligence Recap Synthesis
   cron.schedule('30 7 * * *', async () => {
-    console.log('[Scheduler] Generating 7:30 AM Daily Intelligence Briefing...');
     try {
       const fetch = require('node-fetch');
       await fetch('http://localhost:3000/api/news/recap', { method: 'POST' });
-      console.log('[Scheduler] Daily Briefing Complete.');
+      console.log('[Scheduler] 7:30 AM Recap Complete.');
     } catch (err) {
-      console.error('[Scheduler] Daily Briefing Failed:', err.message);
+      console.error('[Scheduler] 7:30 AM Recap Failed:', err.message);
     }
   });
 };
 
 // Routes
-app.use('/api/accounts', require('./routes/accounts'));
-app.use('/api/tickets', require('./routes/tickets'));
-app.use('/api/news', require('./routes/news'));
-app.use('/api/health', require('./routes/health'));
+app.use('/api/accounts', accountsRouter);
+app.use('/api/tickets', ticketsRouter);
+app.use('/api/news', newsRouter);
+app.use('/api/health', healthRouter);
 
 // Serve UI
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+// Start Scheduler
 startDailyScheduler();
 
-app.listen(PORT, () => {
-  console.log(`\n🚀 CSM Intelligence Dashboard running at http://localhost:${PORT}`);
-  console.log(`📊 Dashboard: http://localhost:${PORT}`);
-  console.log(`🔌 API:       http://localhost:${PORT}/api`);
+// Global Error Handler (Prevents "Status 1" Crashes)
+process.on('uncaughtException', (err) => {
+  console.error('🔥 CRITIAL ERROR (Server Crash Prevented):', err.message);
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`\n🚀 CSM Intelligence Dashboard running at http://0.0.0.0:${PORT}`);
   console.log(`🕐 Staggered scrub scheduled (7:00 & 7:30 AM)\n`);
 });
