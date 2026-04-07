@@ -2,7 +2,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
-const { isCloud, db, writeOne, ensureDataDir } = require('../services/db');
+const { isCloud, db, readAll, writeOne, ensureDataDir } = require('../services/db');
 
 const router = express.Router();
 const DATA_PATH = path.join(__dirname, '../data/accounts.json');
