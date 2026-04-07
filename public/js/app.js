@@ -275,13 +275,18 @@ window.App = {
     document.getElementById('page-subtitle').textContent = meta.subtitle;
 
     // Lazy-load view content
-    switch(view) {
-      case 'accounts':    Accounts.load(); break;
-      case 'triage':      Triage.load(); break;
-      case 'tickets':     Tickets.load(); break;
-      case 'renewals':    Renewals.load(); break;
-      case 'intelligence': Intelligence.load(); break;
-      case 'data':        this.loadDataHub(); break;
+    try {
+        switch(view) {
+          case 'accounts':    Accounts.load(); break;
+          case 'triage':      Triage.load(); break;
+          case 'tickets':     Tickets.load(); break;
+          case 'renewals':    Renewals.load(); break;
+          case 'intelligence': Intelligence.load(); break;
+          case 'data':        this.loadDataHub(); break;
+        }
+    } catch (err) {
+        console.error(`[App] Navigation Error for ${view}:`, err);
+        App.toast(`Module Error: ${view} could not be initialized`, 'error');
     }
   },
 
