@@ -418,38 +418,7 @@ window.App = {
 
   // ─── Data Center Logic ───────────────────────────────────────
   async loadDataHub() {
-    console.log('[App] Data Hub loaded');
-    try {
-      const res = await fetch(`${API}/health/status`);
-      const data = await res.json();
-      const badge = document.getElementById('cloud-status-badge');
-      if (badge) {
-        badge.textContent = data.persistence;
-        badge.className = `badge ${data.isCloud ? 'badge--green' : 'badge--risk'}`;
-      }
-    } catch(e) {
-      console.warn('[App] Status check failed');
-    }
-  },
-
-  async syncLocalToCloud() {
-    const btn = document.getElementById('btn-sync-cloud');
-    const ogText = btn.textContent;
-    btn.textContent = 'Syncing...';
-    btn.disabled = true;
-
-    try {
-      const res = await fetch(`${API}/accounts/maintenance/sync-local-to-cloud`, { method: 'POST' });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      this.toast(data.message, 'success');
-      await this.loadDataHub();
-    } catch (err) {
-      this.toast(`Sync failed: ${err.message}`, 'error');
-    } finally {
-      btn.textContent = ogText;
-      btn.disabled = false;
-    }
+    console.log('[App] Data Hub ready.');
   },
 
   downloadTemplate() {

@@ -341,32 +341,8 @@
                 </div>
               </div>
             </div>
-          </div>
-
-            </div>
-          </div>
-
           <!-- Actions & Rules -->
           <div style="display:flex; flex-direction:column; gap:24px;">
-            <!-- Cloud Persistence Health -->
-            <div class="card" style="border: 1px solid var(--border-strong); background: rgba(0,0,0,0.2);">
-              <div class="card-header">
-                <h2 class="card-title">Cloud Persistence</h2>
-              </div>
-              <div style="padding:20px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                  <span style="font-size:0.8rem; color:var(--text-muted);">Status:</span>
-                  <span id="cloud-status-badge" class="badge badge--grey">Checking...</span>
-                </div>
-                <div style="padding:12px; background:rgba(255,255,255,0.03); border-radius:8px; margin-bottom:16px;">
-                  <p style="font-size:0.75rem; color:var(--text-secondary); line-height:1.4;">Each GitHub push wipes local changes on Render. To make your test properties permanent, push the current local JSON to your Cloud Firestore.</p>
-                </div>
-                <button class="btn btn--primary btn--sm" id="btn-sync-cloud" style="width:100%; display:flex; justify-content:center;" onclick="App.syncLocalToCloud()">
-                  Push Local Data to Cloud
-                </button>
-              </div>
-            </div>
-
             <!-- Client Provisioning -->
             <div class="card">
               <div class="card-header">

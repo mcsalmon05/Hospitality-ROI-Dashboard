@@ -9,6 +9,8 @@ const newsRouter = require('./routes/news');
 const healthRouter = require('./routes/health');
 const { router: usersRouter, authMiddleware } = require('./routes/users');
 const { runIntelligenceScrub } = require('./routes/news');
+const { isCloud, readAll, writeOne } = require('./services/db');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -58,6 +60,26 @@ const startDailyScheduler = () => {
   });
 };
 
+// ─── Auto-Seed Cloud Data ──────────────────────────────────
+const seedDatabase = async () => {
+  if (!isCloud) return;
+  try {
+    const existing = await readAll('accounts', path.join(__dirname, 'data/accounts.json'));
+    if (existing.length < 5) {
+      console.log('[Cloud Seed] Initializing Firestore with local seed data...');
+      const localAcc = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/accounts.json'), 'utf8'));
+      for (const a of localAcc) await writeOne('accounts', a.id, a);
+      
+      const localUsers = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/users.json'), 'utf8'));
+      for (const u of localUsers) await writeOne('users', u.id, u);
+      
+      console.log('[Cloud Seed] Success: 11 properties and partners provisioned.');
+    }
+  } catch (err) {
+    console.error('[Cloud Seed] Failed:', err.message);
+  }
+};
+
 // ─── API Router Gateway ────────────────────
 app.use('/api', usersRouter); // Handle /api/users, /api/auth/login, etc inside usersRouter
 
@@ -77,8 +99,9 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Start Scheduler
+// Start Scheduler & Seed
 startDailyScheduler();
+seedDatabase();
 
 // Global Error Handler (Prevents "Status 1" Crashes)
 process.on('uncaughtException', (err) => {
