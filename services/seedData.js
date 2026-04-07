@@ -299,7 +299,8 @@ const SEED_USERS = [
 const SEED_TICKETS = [
   { "id": "t1", "accountId": "hotel-tp008", "accountName": "Metro Budget Stays", "title": "PMS Integration Failure", "priority": "Critical", "status": "Escalated", "category": "Technical", "assignee": "Sarah Chen", "createdAt": new Date(Date.now() - 518400000).toISOString() },
   { "id": "t2", "accountId": "hotel-tp004", "accountName": "Seaside Budget Inn", "title": "Bulk Guest Data Error", "priority": "High", "status": "In Progress", "category": "Data", "assignee": "Alex Taylor", "createdAt": new Date(Date.now() - 345600000).toISOString() },
-  { "id": "t3", "accountId": "hotel-tp011", "accountName": "Rustic Creek Cabins", "title": "Billing Clarification", "priority": "Medium", "status": "Open", "category": "Billing", "assignee": "Alex Taylor", "createdAt": new Date(Date.now() - 172800000).toISOString() }
+  { "id": "t3", "accountId": "hotel-tp011", "accountName": "Rustic Creek Cabins", "title": "Billing Clarification", "priority": "Medium", "status": "Open", "category": "Billing", "assignee": "Alex Taylor", "createdAt": new Date(Date.now() - 172800000).toISOString() },
+  { "id": "t4", "accountId": "hotel-t2003", "accountName": "Test Client Budget", "title": "Revenue sync mismatch discovered in Q2 report", "priority": "High", "status": "Open", "category": "Technical", "assignee": "Morgan Lee", "createdAt": new Date(Date.now() - 86400000).toISOString() }
 ];
 
 const SEED_ALERTS = [
@@ -328,6 +329,19 @@ const SEED_ALERTS = [
     "keyword": "Hygiene",
     "link": "#",
     "summary": "Three specific reviews mentioned 'cleanliness' in the last 48 hours."
+  },
+  {
+    "id": "a3",
+    "accountId": "hotel-t2001",
+    "accountName": "Test Client Plaza",
+    "title": "Corporate rival chain scouting adjacent blocks for new development",
+    "level": "critical",
+    "levelLabel": "Competitive Risk",
+    "source": "Market Watch",
+    "pubDate": new Date().toISOString(),
+    "keyword": "Development",
+    "link": "#",
+    "summary": "Real estate filings indicate high-interest scouting near the Plaza's primary market."
   }
 ];
 
