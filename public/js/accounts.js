@@ -405,6 +405,48 @@ window.Accounts = {
           </div>
         </div>
 
+        <div class="modal-section">
+          <div class="modal-section-title">Performance Metrics</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Occupancy %</label>
+              <input type="number" name="occupancyPct" class="search-input" style="width:100%; border:1px solid var(--border);" placeholder="0" />
+            </div>
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">RevPAR ($)</label>
+              <input type="number" name="revPar" class="search-input" style="width:100%; border:1px solid var(--border);" placeholder="0" />
+            </div>
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Direct Booking %</label>
+              <input type="number" name="directBookingPct" class="search-input" style="width:100%; border:1px solid var(--border);" placeholder="0" />
+            </div>
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">ADR ($)</label>
+              <input type="number" name="adr" class="search-input" style="width:100%; border:1px solid var(--border);" placeholder="0" />
+            </div>
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">GOPPAR ($)</label>
+              <input type="number" name="goppar" class="search-input" style="width:100%; border:1px solid var(--border);" placeholder="0" />
+            </div>
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Guest Sentiment (1-5)</label>
+              <input type="number" step="0.1" name="reviewScore" class="search-input" style="width:100%; border:1px solid var(--border);" placeholder="5.0" />
+            </div>
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Feature Adoption %</label>
+              <input type="number" name="featureAdoptionScore" class="search-input" style="width:100%; border:1px solid var(--border);" placeholder="0" />
+            </div>
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Payment Status</label>
+              <select name="paymentStatus" class="select-sm" style="width:100%; border:1px solid var(--border); height:38px;">
+                <option value="good">Good Standing</option>
+                <option value="late">Payment Late</option>
+                <option value="at-risk">At Risk</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
           <button type="button" class="btn btn--ghost" onclick="Accounts.closeModal()">Cancel</button>
           <button type="submit" class="btn btn--primary">Create Account</button>
@@ -422,14 +464,17 @@ window.Accounts = {
     if (data.contractValue) data.contractValue = Number(data.contractValue);
     if (data.totalRooms) data.totalRooms = Number(data.totalRooms);
 
-    // Initial default properties
-    data.occupancyPct = 0;
-    data.revPar = 0;
-    data.directBookingPct = 0;
-    data.adr = 0;
-    data.reviewScore = 5.0;
-    data.paymentStatus = 'good';
-    data.featureAdoptionScore = 0;
+    // Parse metrics or default
+    data.occupancyPct = data.occupancyPct ? Number(data.occupancyPct) : 0;
+    data.revPar = data.revPar ? Number(data.revPar) : 0;
+    data.directBookingPct = data.directBookingPct ? Number(data.directBookingPct) : 0;
+    data.adr = data.adr ? Number(data.adr) : 0;
+    data.goppar = data.goppar ? Number(data.goppar) : 0;
+    data.reviewScore = data.reviewScore ? Number(data.reviewScore) : 5.0;
+    data.featureAdoptionScore = data.featureAdoptionScore ? Number(data.featureAdoptionScore) : 0;
+    data.paymentStatus = data.paymentStatus || 'good';
+
+    // Defaults for system fields
     data.openTickets = 0;
     data.escalatedTickets = 0;
 
