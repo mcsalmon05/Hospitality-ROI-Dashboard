@@ -82,16 +82,31 @@ window.App = {
   },
 
   async loadPartnerSwitcher() {
+    const select = document.getElementById('global-project-filter');
+    const wrapper = document.getElementById('project-switcher-wrapper');
+    if (!select) return;
+
     try {
       const res = await fetch(`${API}/users`);
+      if (!res.ok) throw new Error('Failed to load partners');
       const users = await res.json();
+      
       const partners = users.filter(u => u.role === 'client');
-      const select = document.getElementById('global-project-filter');
+      console.log(`[Partners] Loaded ${partners.length} partner portfolios`);
+
       select.innerHTML = '<option value="all">Global Partner Overview</option>';
       partners.sort((a,b) => (a.name||a.email).localeCompare(b.name||b.email)).forEach(u => {
-        select.innerHTML += `<option value="${u.id}" data-tag="${u.partnerTag || ''}">${u.name || u.email}</option>`;
+        const opt = document.createElement('option');
+        opt.value = u.id;
+        opt.textContent = u.name || u.email;
+        opt.dataset.tag = u.partnerTag || '';
+        select.appendChild(opt);
       });
-    } catch(e) {}
+
+      if (wrapper) wrapper.style.display = partners.length > 0 ? '' : 'none';
+    } catch(e) {
+      console.error('[Partners] Load error:', e);
+    }
   },
 
   async createUser(event) {
@@ -115,8 +130,10 @@ window.App = {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to create user');
-      App.toast(`Partner ${name} provisioned!`, 'success');
+      
+      App.toast(`Partner Portfolio "${name}" Provisioned!`, 'success');
       document.getElementById('form-create-user').reset();
+      await this.loadPartnerSwitcher(); // Refresh dropdown immediately
     } catch (err) {
       App.toast(err.message, 'error');
     } finally {
@@ -483,26 +500,48 @@ window.App = {
     const reader = new FileReader();
     reader.onload = async (e) => {
       try {
-        const data = JSON.parse(e.target.result);
-        const accounts = Array.isArray(data) ? data : [data];
+        let accounts = [];
+        const content = e.target.result;
         
-        // --- Mapping Validation ---
-        const invalidRows = accounts.filter(a => !a.id && !a.name);
-        if (invalidRows.length > 0) {
-          return App.toast(`Import Aborted: Found ${invalidRows.length} properties missing both ID and Name identifiers.`, 'error', 6000);
+        if (file.name.endsWith('.csv') || content.trim().startsWith('id,') || content.trim().split('\n')[0].includes(',')) {
+          // Robust CSV Parsing
+          const lines = content.trim().split('\n');
+          const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+          accounts = lines.slice(1).map(line => {
+            const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+            const obj = {};
+            headers.forEach((h, i) => {
+              const val = values[i] || '';
+              if (['contractValue','totalRooms','occupancyPct','revPar','reviewScore'].includes(h)) {
+                obj[h] = parseFloat(val) || 0;
+              } else {
+                obj[h] = val;
+              }
+            });
+            return obj;
+          }).filter(a => a.name);
+        } else {
+          // JSON Parsing
+          const data = JSON.parse(content);
+          accounts = Array.isArray(data) ? data : [data];
         }
+        
+        if (!accounts.length) throw new Error('No valid properties found');
 
-        const res = await fetch(`${API}/accounts/import`, {
+        const res = await fetch(`${API}/accounts/import/bulk`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ accounts })
         });
         const result = await res.json();
-        App.toast(`Successfully imported ${result.imported} properties!`, 'success', 5000);
+        if (result.error) throw new Error(result.error);
+
+        App.toast(`Successfully imported ${result.imported || result.count} properties!`, 'success', 5000);
         await this.loadBadges();
         if (this.currentView === 'dashboard') await Dashboard.init();
       } catch (err) {
-        App.toast('Import failed - check file format', 'error');
+        console.error('[Import] Error:', err);
+        App.toast(`Import failed: ${err.message}`, 'error');
       }
     };
     reader.readAsText(file);
