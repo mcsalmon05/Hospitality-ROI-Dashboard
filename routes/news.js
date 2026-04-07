@@ -8,7 +8,7 @@ const { v4: uuidv4 } = require('uuid');
 const router = express.Router();
 const ACCOUNTS_PATH = path.join(__dirname, '../data/accounts.json');
 const SETTINGS_PATH = path.join(__dirname, '../data/settings.json');
-const { isCloud, db, writeOne } = require('../services/db');
+const { isCloud, db, readAll, writeOne } = require('../services/db');
 
 // --- Updated Persistence: Google Firestore (Cloud) + JSON (Local) ---
 const INTEL_PATH = path.join(__dirname, '../data/intelligence.json');
