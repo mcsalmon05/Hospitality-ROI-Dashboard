@@ -109,7 +109,117 @@ window.Tickets = {
     }).join('');
   },
 
-  showAddModal() {
-    App.toast('Ticket creation form coming soon!', 'info');
+  async showAddModal() {
+    const overlay = document.getElementById('account-modal-overlay');
+    const content = document.getElementById('account-modal-content');
+    overlay.classList.add('active');
+
+    // Fetch accounts to populate dropdown
+    let accountOptions = '<option value="" disabled selected>Select property...</option>';
+    try {
+      const accounts = await fetch(`${API}/accounts`).then(r => r.json());
+      accountOptions += accounts.map(a => `<option value="${a.id}" data-name="${a.name}">${a.name} (${a.industry || 'Property'})</option>`).join('');
+    } catch(e) {
+      accountOptions = '<option value="" disabled>Failed to load accounts</option>';
+    }
+
+    content.innerHTML = `
+      <div class="modal-header" style="margin-bottom: 24px;">
+        <div class="modal-account-name" style="font-size:1.5rem;">Create New Support Ticket</div>
+        <div class="modal-account-meta">Log a manual desk request or escalated property issue</div>
+      </div>
+      <form id="add-ticket-form" onsubmit="Tickets.submitAddTicket(event)">
+        <div class="modal-section">
+          <div class="modal-section-title">Ticket Information</div>
+          <div style="margin-bottom:16px;">
+            <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Associated Property *</label>
+            <select name="accountId" class="select-sm" style="width:100%; border:1px solid var(--border); height:38px;" required>
+              ${accountOptions}
+            </select>
+          </div>
+          <div style="margin-bottom:16px;">
+            <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Ticket Title / Issue *</label>
+            <input type="text" name="title" class="search-input" style="width:100%; border:1px solid var(--border);" required placeholder="e.g. PMS Sync Error" />
+          </div>
+        </div>
+
+        <div class="modal-section">
+          <div class="modal-section-title">Classification & Assignment</div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Priority</label>
+              <select name="priority" class="select-sm" style="width:100%; border:1px solid var(--border); height:38px;">
+                <option value="Low">Low</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Category</label>
+              <select name="category" class="select-sm" style="width:100%; border:1px solid var(--border); height:38px;">
+                <option value="Technical">Technical</option>
+                <option value="Billing">Billing</option>
+                <option value="Data">Data</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Status</label>
+              <select name="status" class="select-sm" style="width:100%; border:1px solid var(--border); height:38px;">
+                <option value="Open" selected>Open</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Escalated">Escalated</option>
+                <option value="Resolved">Resolved</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Assignee</label>
+              <input type="text" name="assignee" class="search-input" style="width:100%; border:1px solid var(--border);" placeholder="Name of CSM or Dev" />
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px;">
+          <button type="button" class="btn btn--ghost" onclick="Accounts.closeModal()">Cancel</button>
+          <button type="submit" class="btn btn--primary">Create Ticket</button>
+        </div>
+      </form>
+    `;
+  },
+
+  async submitAddTicket(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData.entries());
+    
+    // Get account name from select
+    const select = event.target.querySelector('select[name="accountId"]');
+    const selectedOption = select.options[select.selectedIndex];
+    data.accountName = selectedOption.getAttribute('data-name') || 'Unknown Property';
+
+    const btn = event.target.querySelector('button[type="submit"]');
+    btn.innerHTML = 'Logging...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`${API}/tickets`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      
+      if (!res.ok) throw new Error('Failed to create ticket');
+      
+      App.toast(`Ticket created for ${data.accountName}`, 'success');
+      Accounts.closeModal();
+      
+      // Refresh tickets
+      await this.load();
+    } catch(e) {
+      App.toast(e.message, 'error');
+      btn.innerHTML = 'Create Ticket';
+      btn.disabled = false;
+    }
   }
 };
