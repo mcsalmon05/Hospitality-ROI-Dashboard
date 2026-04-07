@@ -326,9 +326,19 @@ router.post('/recap', async (req, res) => {
       timestamp: new Date().toISOString(),
       summary: `Portfolio assessment complete. Identified ${criticalAlerts.length} high-risk signals and ${atRisk.length} occupancy warnings.`,
       highlights: [
-        ...criticalAlerts.map(a => `High Risk: ${a.source} reports ${a.title} for ${a.accountName || 'Partner'}.`),
-        ...atRisk.map(a => `Occupancy Warning: ${a.name} is tracking at ${a.occupancyPct}%. Suggesting dynamic pricing audit.`),
-        ...topPerformers.map(a => `ROI Leader: ${a.name} hit an ADR of $${a.adr} this cycle.`)
+        ...criticalAlerts.map(a => {
+          const acc = accounts.find(acc => acc.id === a.accountId);
+          const pName = acc?.partnerTag === 'testpilot' ? 'Test Pilot' : acc?.partnerTag === 'testclient2' ? 'Test Client 2' : '';
+          return `${pName ? `[${pName}] ` : ''}High Risk: ${a.source} reports ${a.title} for ${a.accountName || 'Partner'}.`;
+        }),
+        ...atRisk.map(a => {
+          const pName = a.partnerTag === 'testpilot' ? 'Test Pilot' : a.partnerTag === 'testclient2' ? 'Test Client 2' : '';
+          return `${pName ? `[${pName}] ` : ''}Occupancy Warning: ${a.name} is tracking at ${a.occupancyPct}%. Suggesting dynamic pricing audit.`;
+        }),
+        ...topPerformers.map(a => {
+          const pName = a.partnerTag === 'testpilot' ? 'Test Pilot' : a.partnerTag === 'testclient2' ? 'Test Client 2' : '';
+          return `${pName ? `[${pName}] ` : ''}ROI Leader: ${a.name} hit an ADR of $${a.adr} this cycle.`;
+        })
       ],
       escalations: criticalAlerts.length > 0 ? "Immediate CSM intervention required for critical sentiment drops." : "No immediate escalations required."
     };
@@ -369,9 +379,19 @@ router.get('/recap', async (req, res) => {
       timestamp: new Date().toISOString(),
       summary: `Portfolio assessment complete. Identified ${criticalAlerts.length} high-risk signals and ${atRisk.length} occupancy warnings.`,
       highlights: [
-        ...criticalAlerts.map(a => `High Risk: ${a.source} reports ${a.title} for ${a.accountName || 'Partner'}.`),
-        ...atRisk.map(a => `Occupancy Warning: ${a.name} is tracking at ${a.occupancyPct}%. Suggesting dynamic pricing audit.`),
-        ...topPerformers.map(a => `ROI Leader: ${a.name} hit an ADR of $${a.adr} this cycle.`)
+        ...criticalAlerts.map(a => {
+          const acc = accounts.find(acc => acc.id === a.accountId);
+          const pName = acc?.partnerTag === 'testpilot' ? 'Test Pilot' : acc?.partnerTag === 'testclient2' ? 'Test Client 2' : '';
+          return `${pName ? `[${pName}] ` : ''}High Risk: ${a.source} reports ${a.title} for ${a.accountName || 'Partner'}.`;
+        }),
+        ...atRisk.map(a => {
+          const pName = a.partnerTag === 'testpilot' ? 'Test Pilot' : a.partnerTag === 'testclient2' ? 'Test Client 2' : '';
+          return `${pName ? `[${pName}] ` : ''}Occupancy Warning: ${a.name} is tracking at ${a.occupancyPct}%. Suggesting dynamic pricing audit.`;
+        }),
+        ...topPerformers.map(a => {
+          const pName = a.partnerTag === 'testpilot' ? 'Test Pilot' : a.partnerTag === 'testclient2' ? 'Test Client 2' : '';
+          return `${pName ? `[${pName}] ` : ''}ROI Leader: ${a.name} hit an ADR of $${a.adr} this cycle.`;
+        })
       ],
       escalations: criticalAlerts.length > 0 ? "Immediate CSM intervention required for critical sentiment drops." : "No immediate escalations required."
     };
