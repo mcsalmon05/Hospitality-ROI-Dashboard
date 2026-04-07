@@ -2,24 +2,34 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
-const { isCloud, db, writeOne } = require('../services/db');
+const { isCloud, db, writeOne, ensureDataDir } = require('../services/db');
 
 const router = express.Router();
 const DATA_PATH = path.join(__dirname, '../data/accounts.json');
 
 // --- Updated Persistence: Google Firestore (Cloud) + JSON (Local) ---
 const readAccounts = () => {
-  // Synchronous for local dev, we will use individual async routes for Cloud
-  return JSON.parse(fs.readFileSync(DATA_PATH, 'utf8'));
+  try {
+    ensureDataDir(DATA_PATH);
+    if (!fs.existsSync(DATA_PATH)) {
+      fs.writeFileSync(DATA_PATH, '[]');
+      return [];
+    }
+    return JSON.parse(fs.readFileSync(DATA_PATH, 'utf8'));
+  } catch (e) {
+    console.error('[DB] Read error:', e.message);
+    return [];
+  }
 };
 
 const writeAccounts = async (accounts) => {
+  ensureDataDir(DATA_PATH);
   fs.writeFileSync(DATA_PATH, JSON.stringify(accounts, null, 2));
   
   // Cloud Sync (Mirroring)
   if (isCloud) {
     for (const acc of accounts) {
-      await writeOne('accounts', acc.id || acc.name, acc);
+      await writeOne('accounts', acc.id || acc.name, acc, DATA_PATH);
     }
   }
 };

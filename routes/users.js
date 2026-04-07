@@ -6,12 +6,17 @@ const { v4: uuidv4 } = require('uuid');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const { readAll, writeOne } = require('../services/db');
+const { readAll, writeOne, ensureDataDir } = require('../services/db');
 const DATA_PATH = path.join(__dirname, '../data/users.json');
 const JWT_SECRET = process.env.JWT_SECRET || 'secret123';
 
 const readUsers = () => {
   try {
+    ensureDataDir(DATA_PATH);
+    if (!fs.existsSync(DATA_PATH)) {
+      fs.writeFileSync(DATA_PATH, '[]');
+      return [];
+    }
     return JSON.parse(fs.readFileSync(DATA_PATH, 'utf8'));
   } catch (err) {
     return [];
@@ -19,6 +24,7 @@ const readUsers = () => {
 };
 
 const writeUsers = (data) => {
+  ensureDataDir(DATA_PATH);
   fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
 };
 
@@ -120,6 +126,7 @@ router.post('/users', authMiddleware, adminMiddleware, async (req, res) => {
     await writeOne('users', newUser.id, newUser);
     res.json({ success: true, id: newUser.id });
   } catch(e) {
+    console.error('[Provision] Critical failure:', e);
     res.status(500).json({ error: e.message });
   }
 });
@@ -137,6 +144,7 @@ router.put('/users/password', authMiddleware, async (req, res) => {
     await writeOne('users', users[idx].id, users[idx]);
     res.json({ success: true });
   } catch(e) {
+    console.error('[Settings] Password update failure:', e);
     res.status(500).json({ error: e.message });
   }
 });

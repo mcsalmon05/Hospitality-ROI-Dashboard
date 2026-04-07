@@ -6,6 +6,11 @@ const path = require('path');
 // Fallback to local files if no Firebase config found (Hybrid Mode)
 let isCloud = false;
 
+const ensureDataDir = (filePath) => {
+  const dir = path.dirname(filePath);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+};
+
 try {
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     if (!admin.apps.length) {
@@ -50,17 +55,30 @@ const readAll = async (key, localPath) => {
       const coll = getCollection(key);
       if (coll) {
         const snapshot = await coll.get();
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if (!snapshot.empty) {
+          return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        }
       }
+    }
+    
+    // Local Fallback / Initialization
+    if (!fs.existsSync(localPath)) {
+      const dataDir = path.dirname(localPath);
+      if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+      fs.writeFileSync(localPath, '[]');
+      return [];
     }
     return JSON.parse(fs.readFileSync(localPath, 'utf8'));
   } catch (e) {
-    console.warn(`[DB] Fallback for ${key}:`, e.message);
-    try { return JSON.parse(fs.readFileSync(localPath, 'utf8')); } catch(e2) { return []; }
+    console.warn(`[DB] Read error for ${key}:`, e.message);
+    try {
+      if (fs.existsSync(localPath)) return JSON.parse(fs.readFileSync(localPath, 'utf8'));
+    } catch(e2) {}
+    return [];
   }
 };
 
-const writeOne = async (key, id, data) => {
+const writeOne = async (key, id, data, localPath) => {
   try {
     if (isCloud && db) {
       const coll = getCollection(key);
@@ -69,10 +87,11 @@ const writeOne = async (key, id, data) => {
         return;
       }
     }
+    if (localPath) ensureDataDir(localPath);
     console.log(`[Local Write] Persisting ${id} to ${key}`);
   } catch (e) {
     console.error(`[DB] Write failure for ${key}:`, e.message);
   }
 };
 
-module.exports = { isCloud, db, readAll, writeOne };
+module.exports = { isCloud, db, readAll, writeOne, ensureDataDir };

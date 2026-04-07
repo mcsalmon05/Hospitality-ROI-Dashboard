@@ -2,25 +2,34 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
-const { isCloud, db, writeOne } = require('../services/db');
+const { isCloud, db, writeOne, ensureDataDir } = require('../services/db');
 
 const router = express.Router();
+const TICKETS_PATH = path.join(__dirname, '../data/tickets.json');
 
 // --- Updated Persistence: Google Firestore (Cloud) + JSON (Local) ---
 const readTickets = () => {
-  const filePath = path.join(__dirname, '../data/tickets.json');
-  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  try {
+    ensureDataDir(TICKETS_PATH);
+    if (!fs.existsSync(TICKETS_PATH)) {
+      fs.writeFileSync(TICKETS_PATH, '[]');
+      return [];
+    }
+    return JSON.parse(fs.readFileSync(TICKETS_PATH, 'utf8'));
+  } catch (err) {
+    return [];
+  }
 };
 
-const writeTickets = (tickets) => {
-  const filePath = path.join(__dirname, '../data/tickets.json');
-  fs.writeFileSync(filePath, JSON.stringify(tickets, null, 2));
+const writeTickets = async (tickets) => {
+  ensureDataDir(TICKETS_PATH);
+  fs.writeFileSync(TICKETS_PATH, JSON.stringify(tickets, null, 2));
 
   // Cloud Mirroring (Sync to Google)
   if (isCloud) {
-    tickets.forEach(ticket => {
-      writeOne('tickets', ticket.id, ticket);
-    });
+    for (const t of tickets) {
+      await writeOne('tickets', t.id, t, TICKETS_PATH);
+    }
   }
 };
 
@@ -61,7 +70,7 @@ router.get('/:id', (req, res) => {
 });
 
 // POST create ticket
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const tickets = readTickets();
     const newTicket = {
@@ -72,7 +81,7 @@ router.post('/', (req, res) => {
       daysOpen: 0
     };
     tickets.push(newTicket);
-    writeTickets(tickets);
+    await writeTickets(tickets);
     res.status(201).json(newTicket);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -80,13 +89,13 @@ router.post('/', (req, res) => {
 });
 
 // PUT update ticket
-router.put('/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
     const tickets = readTickets();
     const idx = tickets.findIndex(t => t.id === req.params.id);
     if (idx === -1) return res.status(404).json({ error: 'Ticket not found' });
     tickets[idx] = { ...tickets[idx], ...req.body, updatedAt: new Date().toISOString() };
-    writeTickets(tickets);
+    await writeTickets(tickets);
     res.json(tickets[idx]);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -94,11 +103,11 @@ router.put('/:id', (req, res) => {
 });
 
 // DELETE ticket
-router.delete('/:id', (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     const tickets = readTickets();
     const filtered = tickets.filter(t => t.id !== req.params.id);
-    writeTickets(filtered);
+    await writeTickets(filtered);
     res.json({ message: 'Ticket deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
