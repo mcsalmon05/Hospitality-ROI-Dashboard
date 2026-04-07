@@ -64,10 +64,18 @@ const readAll = async (key, localPath) => {
     
     // Local Fallback / Initialization
     if (!fs.existsSync(localPath)) {
-      const dataDir = path.dirname(localPath);
-      if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
-      fs.writeFileSync(localPath, '[]');
-      return [];
+      console.log(`[DB] Local file missing: ${localPath}. Initializing with seeds...`);
+      const seeds = {
+          'accounts': SEED_ACCOUNTS,
+          'users': SEED_USERS,
+          'tickets': SEED_TICKETS,
+          'news': { alerts: SEED_ALERTS }
+      };
+      const data = seeds[key] || [];
+      const dir = path.dirname(localPath);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(localPath, JSON.stringify(data, null, 2));
+      return data;
     }
     return JSON.parse(fs.readFileSync(localPath, 'utf8'));
   } catch (e) {
