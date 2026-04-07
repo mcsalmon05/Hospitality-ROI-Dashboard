@@ -43,7 +43,8 @@ router.post('/login', async (req, res) => {
   // Backwards compatibility trick for single password UI:
   // If no email is provided, maybe they just entered the old PIN in the password field.
   // Actually, UI needs to change to send email and password.
-  const user = users.find(u => u.email === email);
+  const parsedEmail = (email || '').trim().toLowerCase();
+  const user = users.find(u => (u.email || '').toLowerCase() === parsedEmail);
   if (!user) return res.status(401).json({ error: 'Invalid credentials' });
 
   const valid = await bcrypt.compare(password, user.password);

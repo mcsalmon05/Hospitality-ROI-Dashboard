@@ -63,7 +63,7 @@ window.App = {
 
   async login(event) {
     event.preventDefault();
-    const email = document.getElementById('login-email').value;
+    const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
     const btn = document.getElementById('login-btn');
     const err = document.getElementById('login-error');
