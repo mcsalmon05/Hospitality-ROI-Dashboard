@@ -28,7 +28,7 @@ const writeIntelligence = (alerts) => {
   }
 };
 
-const readAccounts = () => JSON.parse(fs.readFileSync(ACCOUNTS_PATH, 'utf8'));
+const readAccounts = async () => await readAll('accounts', ACCOUNTS_PATH);
 const readSettings = () => JSON.parse(fs.readFileSync(SETTINGS_PATH, 'utf8'));
 
 const xmlParser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: '@_' });
@@ -117,8 +117,8 @@ async function scrapeCompanyNews(account) {
 // ─── Main scrub runner (exported for cron + manual trigger) ──────────────────
 async function runIntelligenceScrub(options = {}) {
   console.log('[Intelligence] Starting scrub...');
-  const accounts = readAccounts();
-  const intel = readIntelligence();
+  const accounts = await readAccounts();
+  const intel = await readIntelligence();
   const existingIds = new Set((intel.alerts || []).map(a => a.link));
 
   const allNewAlerts = [];
@@ -240,12 +240,12 @@ router.post('/scrub', async (req, res) => {
 // POST trigger scrub for single account
 router.post('/scrub/:accountId', async (req, res) => {
   try {
-    const accounts = readAccounts();
+    const accounts = await readAccounts();
     const account = accounts.find(a => a.id === req.params.accountId);
     if (!account) return res.status(404).json({ error: 'Account not found' });
 
     const alerts = await scrapeCompanyNews(account);
-    const intel = readIntelligence();
+    const intel = await readIntelligence();
     const existingIds = new Set((intel.alerts || []).map(a => a.link));
     const newAlerts = alerts.filter(a => !existingIds.has(a.link));
     const combined = [...newAlerts, ...(intel.alerts || [])].slice(0, 200);
@@ -258,9 +258,9 @@ router.post('/scrub/:accountId', async (req, res) => {
 });
 
 // PUT dismiss an alert
-router.put('/alerts/:id/dismiss', (req, res) => {
+router.put('/alerts/:id/dismiss', async (req, res) => {
   try {
-    const intel = readIntelligence();
+    const intel = await readIntelligence();
     const alert = intel.alerts.find(a => a.id === req.params.id);
     if (!alert) return res.status(404).json({ error: 'Alert not found' });
     alert.dismissed = true;
@@ -272,9 +272,9 @@ router.put('/alerts/:id/dismiss', (req, res) => {
 });
 
 // DELETE clear all dismissed alerts
-router.delete('/alerts/dismissed', (req, res) => {
+router.delete('/alerts/dismissed', async (req, res) => {
   try {
-    const intel = readIntelligence();
+    const intel = await readIntelligence();
     intel.alerts = (intel.alerts || []).filter(a => !a.dismissed);
     writeIntelligence(intel);
     res.json({ message: 'Cleared dismissed alerts' });
@@ -284,10 +284,11 @@ router.delete('/alerts/dismissed', (req, res) => {
 });
 
 // POST generate daily recap (Synthesize news + ROI shifts)
-router.post('/recap', (req, res) => {
+router.post('/recap', async (req, res) => {
   try {
-    const alerts = readIntelligence();
-    const accounts = JSON.parse(fs.readFileSync(path.join(__dirname, '../data/accounts.json'), 'utf8'));
+    const intel = await readIntelligence();
+    const alerts = Array.isArray(intel) ? intel : (intel.alerts || []);
+    const accounts = await readAccounts();
     
     // Logic to select high-priority signals from the last 24 hours
     const criticalAlerts = alerts.filter(a => a.level === 'critical').slice(0, 3);

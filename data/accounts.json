@@ -1,45 +1,5 @@
 [
   {
-    "id": "hotel-001",
-    "name": "The Grand Regent",
-    "industry": "Luxury Resort",
-    "partnerTag": "csm-global",
-    "csm": "Sarah Chen",
-    "contractValue": 12500,
-    "contractEnd": "2026-05-21",
-    "status": "Healthy",
-    "healthScore": 88,
-    "totalRooms": 250,
-    "occupancyPct": 82,
-    "adr": 450,
-    "revPar": 369,
-    "directBookingPct": 42,
-    "reviewScore": 4.8,
-    "openTickets": 1,
-    "paymentStatus": "good",
-    "createdAt": "2025-01-15T00:00:00Z"
-  },
-  {
-    "id": "hotel-002",
-    "name": "City Hub Boutique",
-    "industry": "Boutique Hotel",
-    "partnerTag": "csm-global",
-    "csm": "Marcus Webb",
-    "contractValue": 4500,
-    "contractEnd": "2026-04-20",
-    "status": "Critical",
-    "healthScore": 32,
-    "totalRooms": 85,
-    "occupancyPct": 45,
-    "adr": 180,
-    "revPar": 81,
-    "directBookingPct": 12,
-    "reviewScore": 3.2,
-    "openTickets": 6,
-    "paymentStatus": "late",
-    "createdAt": "2025-04-10T00:00:00Z"
-  },
-  {
     "id": "hotel-tp001",
     "name": "Azure Bay Resort",
     "industry": "Resort & Spa",
@@ -56,8 +16,7 @@
     "directBookingPct": 45,
     "reviewScore": 4.9,
     "openTickets": 0,
-    "paymentStatus": "good",
-    "createdAt": "2026-03-01T00:00:00Z"
+    "paymentStatus": "good"
   },
   {
     "id": "hotel-tp002",
@@ -76,8 +35,7 @@
     "directBookingPct": 18,
     "reviewScore": 3.8,
     "openTickets": 3,
-    "paymentStatus": "good",
-    "createdAt": "2026-03-01T00:00:00Z"
+    "paymentStatus": "good"
   },
   {
     "id": "hotel-tp003",
@@ -96,8 +54,7 @@
     "directBookingPct": 32,
     "reviewScore": 4.5,
     "openTickets": 1,
-    "paymentStatus": "good",
-    "createdAt": "2026-03-01T00:00:00Z"
+    "paymentStatus": "good"
   },
   {
     "id": "hotel-tp004",
@@ -116,8 +73,7 @@
     "directBookingPct": 8,
     "reviewScore": 2.9,
     "openTickets": 9,
-    "paymentStatus": "late",
-    "createdAt": "2026-03-01T00:00:00Z"
+    "paymentStatus": "late"
   },
   {
     "id": "hotel-tp005",
@@ -136,8 +92,7 @@
     "directBookingPct": 38,
     "reviewScore": 4.7,
     "openTickets": 1,
-    "paymentStatus": "good",
-    "createdAt": "2026-03-01T00:00:00Z"
+    "paymentStatus": "good"
   },
   {
     "id": "hotel-tp006",
@@ -156,8 +111,7 @@
     "directBookingPct": 48,
     "reviewScore": 4.9,
     "openTickets": 0,
-    "paymentStatus": "good",
-    "createdAt": "2026-04-01T00:00:00Z"
+    "paymentStatus": "good"
   },
   {
     "id": "hotel-tp007",
@@ -176,8 +130,7 @@
     "directBookingPct": 22,
     "reviewScore": 4.1,
     "openTickets": 4,
-    "paymentStatus": "good",
-    "createdAt": "2026-04-01T00:00:00Z"
+    "paymentStatus": "good"
   },
   {
     "id": "hotel-tp008",
@@ -196,8 +149,7 @@
     "directBookingPct": 10,
     "reviewScore": 3.1,
     "openTickets": 12,
-    "paymentStatus": "late",
-    "createdAt": "2026-04-01T00:00:00Z"
+    "paymentStatus": "late"
   },
   {
     "id": "hotel-tp009",
@@ -216,8 +168,7 @@
     "directBookingPct": 38,
     "reviewScore": 4.7,
     "openTickets": 2,
-    "paymentStatus": "good",
-    "createdAt": "2026-04-01T00:00:00Z"
+    "paymentStatus": "good"
   },
   {
     "id": "hotel-tp010",
@@ -236,8 +187,7 @@
     "directBookingPct": 35,
     "reviewScore": 4.6,
     "openTickets": 1,
-    "paymentStatus": "good",
-    "createdAt": "2026-04-01T00:00:00Z"
+    "paymentStatus": "good"
   },
   {
     "id": "hotel-tp011",
@@ -254,10 +204,8 @@
     "adr": 190,
     "revPar": 114,
     "directBookingPct": 15,
-    "reviewScore": 4.0,
+    "reviewScore": 4,
     "openTickets": 3,
-    "paymentStatus": "good",
-    "createdAt": "2026-04-01T00:00:00Z"
+    "paymentStatus": "good"
   }
 ]
-

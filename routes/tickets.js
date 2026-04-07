@@ -8,18 +8,7 @@ const router = express.Router();
 const TICKETS_PATH = path.join(__dirname, '../data/tickets.json');
 
 // --- Updated Persistence: Google Firestore (Cloud) + JSON (Local) ---
-const readTickets = () => {
-  try {
-    ensureDataDir(TICKETS_PATH);
-    if (!fs.existsSync(TICKETS_PATH)) {
-      fs.writeFileSync(TICKETS_PATH, '[]');
-      return [];
-    }
-    return JSON.parse(fs.readFileSync(TICKETS_PATH, 'utf8'));
-  } catch (err) {
-    return [];
-  }
-};
+// removed readTickets in favor of readAll directly
 
 const writeTickets = async (tickets) => {
   ensureDataDir(TICKETS_PATH);
@@ -38,6 +27,23 @@ router.get('/', async (req, res) => {
   try {
     let tickets = await readAll('tickets', TICKETS_PATH);
     console.log(`[X-Ray] Tickets Route: Fetched ${tickets.length} total tickets. Query:`, req.query);
+    
+    // Auth & Project Filter
+    const accountsPath = path.join(__dirname, '../data/accounts.json');
+    let rawAccounts = await readAll('accounts', accountsPath);
+
+    if (req.user && req.user.role !== 'admin') {
+      const partnerTag = req.user.partnerTag;
+      if (partnerTag) {
+        const allowedAccounts = rawAccounts.filter(a => a.partnerTag === partnerTag).map(a => a.id);
+        tickets = tickets.filter(t => allowedAccounts.includes(t.accountId));
+      } else {
+        tickets = [];
+      }
+    } else if (req.query.partnerTag && req.query.partnerTag !== 'all') {
+      const allowedAccounts = rawAccounts.filter(a => a.partnerTag === req.query.partnerTag).map(a => a.id);
+      tickets = tickets.filter(t => allowedAccounts.includes(t.accountId));
+    }
     
     if (req.query.accountId) {
       tickets = tickets.filter(t => t.accountId === req.query.accountId);
@@ -74,7 +80,7 @@ router.get('/:id', async (req, res) => {
 // POST create ticket
 router.post('/', async (req, res) => {
   try {
-    const tickets = readTickets();
+    const tickets = await readAll('tickets', TICKETS_PATH);
     const newTicket = {
       id: `tkt-${uuidv4().split('-')[0]}`,
       ...req.body,
@@ -93,7 +99,7 @@ router.post('/', async (req, res) => {
 // PUT update ticket
 router.put('/:id', async (req, res) => {
   try {
-    const tickets = readTickets();
+    const tickets = await readAll('tickets', TICKETS_PATH);
     const idx = tickets.findIndex(t => t.id === req.params.id);
     if (idx === -1) return res.status(404).json({ error: 'Ticket not found' });
     tickets[idx] = { ...tickets[idx], ...req.body, updatedAt: new Date().toISOString() };
@@ -107,7 +113,7 @@ router.put('/:id', async (req, res) => {
 // DELETE ticket
 router.delete('/:id', async (req, res) => {
   try {
-    const tickets = readTickets();
+    const tickets = await readAll('tickets', TICKETS_PATH);
     const filtered = tickets.filter(t => t.id !== req.params.id);
     await writeTickets(filtered);
     res.json({ message: 'Ticket deleted' });
@@ -119,7 +125,25 @@ router.delete('/:id', async (req, res) => {
 // GET ticket summary stats
 router.get('/meta/summary', async (req, res) => {
   try {
-    const tickets = await readAll('tickets', TICKETS_PATH);
+    let tickets = await readAll('tickets', TICKETS_PATH);
+    
+    // Auth & Project Filter
+    const accountsPath = path.join(__dirname, '../data/accounts.json');
+    let rawAccounts = await readAll('accounts', accountsPath);
+
+    if (req.user && req.user.role !== 'admin') {
+      const partnerTag = req.user.partnerTag;
+      if (partnerTag) {
+        const allowedAccounts = rawAccounts.filter(a => a.partnerTag === partnerTag).map(a => a.id);
+        tickets = tickets.filter(t => allowedAccounts.includes(t.accountId));
+      } else {
+        tickets = [];
+      }
+    } else if (req.query.partnerTag && req.query.partnerTag !== 'all') {
+      const allowedAccounts = rawAccounts.filter(a => a.partnerTag === req.query.partnerTag).map(a => a.id);
+      tickets = tickets.filter(t => allowedAccounts.includes(t.accountId));
+    }
+    
     const open = tickets.filter(t => t.status === 'Open');
     const escalated = tickets.filter(t => t.status === 'Escalated');
     const critical = tickets.filter(t => t.priority === 'Critical');

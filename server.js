@@ -74,34 +74,47 @@ const startDailyScheduler = () => {
   });
 };
 
-// ─── Auto-Seed Cloud Data (Fail-Safe) ──────────────────────
 const seedDatabase = async () => {
-  if (!isCloud) return;
   try {
     const dataDir = path.join(__dirname, 'data');
     const accPath = path.join(dataDir, 'accounts.json');
+    const usersPath = path.join(dataDir, 'users.json');
+    const ticketsPath = path.join(dataDir, 'tickets.json');
+    const newsPath = path.join(dataDir, 'intelligence.json');
     
-    // Check cloud for existing properties
+    // Ensure data directory exists locally
+    if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+
+    // Check cloud (or local fallback) for existing properties
     const existing = await readAll('accounts', accPath);
     const hasTestPilot = existing.some(a => a.partnerTag === 'testpilot');
     
     if (!hasTestPilot || existing.length < 5) {
-      console.log('[Cloud Seed] Initializing Firestore from FAIL-SAFE embedded data...');
+      console.log('[Seed] Initializing missing database items with FAIL-SAFE embedded data...');
       
-      // Push Accounts
-      for (const a of SEED_ACCOUNTS) {
-        await writeOne('accounts', a.id, a);
+      const { SEED_TICKETS, SEED_ALERTS } = require('./services/seedData');
+      
+      // 1. Initialize strictly to Local File System 
+      fs.writeFileSync(accPath, JSON.stringify(SEED_ACCOUNTS, null, 2));
+      fs.writeFileSync(usersPath, JSON.stringify(SEED_USERS, null, 2));
+      fs.writeFileSync(ticketsPath, JSON.stringify(SEED_TICKETS, null, 2));
+      fs.writeFileSync(newsPath, JSON.stringify({ alerts: SEED_ALERTS }, null, 2));
+      
+      // 2. Push to Cloud (if active deployment)
+      if (isCloud) {
+        // Parallelizing pushes for speed and robustness
+        await Promise.all([
+          ...SEED_ACCOUNTS.map(a => writeOne('accounts', a.id, a)),
+          ...SEED_USERS.map(u => writeOne('users', u.id, u)),
+          ...SEED_TICKETS.map(t => writeOne('tickets', t.id, t)),
+          writeOne('news', 'daily_alerts', { alerts: SEED_ALERTS })
+        ]);
       }
       
-      // Push Users
-      for (const u of SEED_USERS) {
-        await writeOne('users', u.id, u);
-      }
-      
-      console.log('[Cloud Seed] Provisoning complete: 11 properties & partners live.');
+      console.log('[Seed] Provisioning complete: Accounts, Users, Tickets, and Alerts live.');
     }
   } catch (err) {
-    console.error('[Cloud Seed] Persistence error:', err.message);
+    console.error('[Seed] Persistence error:', err.message);
   }
 };
 
@@ -110,6 +123,7 @@ app.use('/api', usersRouter); // Handle /api/users, /api/auth/login, etc inside 
 
 // Protection for everything else under /api (Catch-all)
 app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
   authMiddleware(req, res, next);
 });
 
