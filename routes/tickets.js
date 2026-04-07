@@ -34,9 +34,9 @@ const writeTickets = async (tickets) => {
 };
 
 // GET all tickets (with optional accountId filter)
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    let tickets = readTickets();
+    let tickets = await readAll('tickets', TICKETS_PATH);
     if (req.query.accountId) {
       tickets = tickets.filter(t => t.accountId === req.query.accountId);
     }
@@ -58,9 +58,9 @@ router.get('/', (req, res) => {
 });
 
 // GET single ticket
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
-    const tickets = readTickets();
+    const tickets = await readAll('tickets', TICKETS_PATH);
     const ticket = tickets.find(t => t.id === req.params.id);
     if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
     res.json(ticket);
@@ -115,9 +115,9 @@ router.delete('/:id', async (req, res) => {
 });
 
 // GET ticket summary stats
-router.get('/meta/summary', (req, res) => {
+router.get('/meta/summary', async (req, res) => {
   try {
-    const tickets = readTickets();
+    const tickets = await readAll('tickets', TICKETS_PATH);
     const open = tickets.filter(t => t.status === 'Open');
     const escalated = tickets.filter(t => t.status === 'Escalated');
     const critical = tickets.filter(t => t.priority === 'Critical');

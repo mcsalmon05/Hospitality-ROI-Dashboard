@@ -422,4 +422,26 @@ router.post('/sync', async (req, res) => {
   }
 });
 
+// POST maintenance: Sync local JSON to Cloud (One-time migration)
+router.post('/maintenance/sync-local-to-cloud', async (req, res) => {
+  try {
+    if (!isCloud) return res.status(400).json({ error: 'System is not in Cloud Mode. No sync needed.' });
+    
+    // Sync Accounts
+    const localAccounts = JSON.parse(fs.readFileSync(DATA_PATH, 'utf8'));
+    await Promise.all(localAccounts.map(acc => writeOne('accounts', acc.id || acc.name, acc, DATA_PATH)));
+    
+    // Sync Tickets (optional, but good for completeness)
+    const ticketsPath = path.join(__dirname, '../data/tickets.json');
+    if (fs.existsSync(ticketsPath)) {
+      const localTickets = JSON.parse(fs.readFileSync(ticketsPath, 'utf8'));
+      await Promise.all(localTickets.map(t => writeOne('tickets', t.id, t, ticketsPath)));
+    }
+
+    res.json({ success: true, message: `Successfully pushed ${localAccounts.length} accounts to Cloud.` });
+  } catch (err) {
+    res.status(500).json({ error: `Migration failed: ${err.message}` });
+  }
+});
+
 module.exports = router;

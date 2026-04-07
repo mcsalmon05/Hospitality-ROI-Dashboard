@@ -1,7 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const { readAll, ensureDataDir } = require('../services/db');
+const { isCloud, readAll, ensureDataDir } = require('../services/db');
 const router = express.Router();
 const ACCOUNTS_PATH = path.join(__dirname, '../data/accounts.json');
 const TICKETS_PATH = path.join(__dirname, '../data/tickets.json');
@@ -94,9 +94,9 @@ router.get('/overview', async (req, res) => {
 });
 
 // GET triage queue — accounts needing immediate action
-router.get('/triage', (req, res) => {
+router.get('/triage', async (req, res) => {
   try {
-    let accounts = readAccounts();
+    let accounts = await readAll('accounts', ACCOUNTS_PATH);
     
     // Auth filter
     if (req.user && req.user.role !== 'admin') {
@@ -136,9 +136,9 @@ router.get('/triage', (req, res) => {
 });
 
 // GET renewal pipeline
-router.get('/renewals', (req, res) => {
+router.get('/renewals', async (req, res) => {
   try {
-    let accounts = readAccounts();
+    let accounts = await readAll('accounts', ACCOUNTS_PATH);
     
     // Auth filter
     if (req.user && req.user.role !== 'admin') {
@@ -173,6 +173,19 @@ router.get('/renewals', (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// GET system status (Cloud vs Local)
+router.get('/status', (req, res) => {
+  res.json({
+    persistence: isCloud ? 'Cloud (Firestore)' : 'Local (JSON)',
+    isCloud: isCloud,
+    mode: process.env.NODE_ENV || 'development',
+    dataStats: {
+      accounts: ACCOUNTS_PATH ? fs.existsSync(ACCOUNTS_PATH) : false,
+      tickets: TICKETS_PATH ? fs.existsSync(TICKETS_PATH) : false
+    }
+  });
 });
 
 module.exports = router;

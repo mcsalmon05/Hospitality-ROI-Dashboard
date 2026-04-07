@@ -11,9 +11,9 @@ const SETTINGS_PATH = path.join(__dirname, '../data/settings.json');
 const { isCloud, db, writeOne } = require('../services/db');
 
 // --- Updated Persistence: Google Firestore (Cloud) + JSON (Local) ---
-const readIntelligence = () => {
-  const filePath = path.join(__dirname, '../data/intelligence.json');
-  return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+const INTEL_PATH = path.join(__dirname, '../data/intelligence.json');
+const readIntelligence = async () => {
+  return await readAll('news', INTEL_PATH);
 };
 
 const writeIntelligence = (alerts) => {
@@ -158,10 +158,9 @@ function getNextScrubTime() {
 // ─── Routes ──────────────────────────────────────────────────────────────────
 
 // GET all alerts
-router.get('/alerts', (req, res) => {
+router.get('/alerts', async (req, res) => {
   try {
-    const intel = readIntelligence();
-    let alerts = intel.alerts || [];
+    const alerts = await readIntelligence();
 
     if (req.query.accountId) {
       alerts = alerts.filter(a => a.accountId === req.query.accountId);
@@ -172,11 +171,19 @@ router.get('/alerts', (req, res) => {
     if (req.query.dismissed === 'false') {
       alerts = alerts.filter(a => !a.dismissed);
     }
+    
+    // Auth filtering for intelligence (Crucial for multi-tenant safety)
+    if (req.user && req.user.role !== 'admin') {
+      const pTag = req.user.partnerTag;
+      const accounts = await readAll('accounts', ACCOUNTS_PATH);
+      const myAccountIds = accounts.filter(acc => acc.partnerTag === pTag).map(acc => acc.id);
+      alerts = alerts.filter(a => myAccountIds.includes(a.accountId));
+    }
 
     res.json({
       alerts,
-      lastScrub: intel.lastScrub,
-      nextScrub: intel.nextScrub
+      lastScrub: new Date().toISOString(), // Fallback
+      nextScrub: getNextScrubTime()
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -184,10 +191,18 @@ router.get('/alerts', (req, res) => {
 });
 
 // GET intelligence summary
-router.get('/summary', (req, res) => {
+router.get('/summary', async (req, res) => {
   try {
-    const intel = readIntelligence();
-    const alerts = intel.alerts || [];
+    let alerts = await readIntelligence();
+    
+    // Auth filtering
+    if (req.user && req.user.role !== 'admin') {
+      const pTag = req.user.partnerTag;
+      const accounts = await readAll('accounts', ACCOUNTS_PATH);
+      const myAccountIds = accounts.filter(acc => acc.partnerTag === pTag).map(acc => acc.id);
+      alerts = alerts.filter(a => myAccountIds.includes(a.accountId));
+    }
+    
     const active = alerts.filter(a => !a.dismissed);
     res.json({
       total: alerts.length,
