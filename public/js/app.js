@@ -48,6 +48,18 @@ window.App = {
     document.getElementById('login-overlay').style.display = 'block';
   },
 
+  togglePassword() {
+    const pwd = document.getElementById('login-password');
+    const btn = event.target;
+    if (pwd.type === 'password') {
+      pwd.type = 'text';
+      btn.textContent = 'Hide';
+    } else {
+      pwd.type = 'password';
+      btn.textContent = 'Show';
+    }
+  },
+
   showApp() {
     document.getElementById('login-overlay').style.display = 'none';
     const appContainer = document.getElementById('app-container');

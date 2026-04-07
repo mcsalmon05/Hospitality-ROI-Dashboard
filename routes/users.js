@@ -36,22 +36,31 @@ const fetchAllUsers = async () => {
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   
-  // Legacy / fallback for users who type single password in the new email field
-  // or we just switch completely to proper auth. But let's build proper auth:
   const users = await fetchAllUsers();
   
-  // Backwards compatibility trick for single password UI:
-  // If no email is provided, maybe they just entered the old PIN in the password field.
-  // Actually, UI needs to change to send email and password.
   const parsedEmail = (email || '').trim().toLowerCase();
+  console.log(`[Auth] Login attempt for: ${parsedEmail}`);
+  
   const user = users.find(u => (u.email || '').toLowerCase() === parsedEmail);
-  if (!user) return res.status(401).json({ error: 'Invalid credentials' });
+  if (!user) {
+    console.warn(`[Auth] User not found: ${parsedEmail}`);
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
 
-  const valid = await bcrypt.compare(password, user.password);
-  if (!valid) return res.status(401).json({ error: 'Invalid credentials' });
-
-  const token = jwt.sign({ id: user.id, role: user.role, accountIds: user.accountIds || [] }, JWT_SECRET, { expiresIn: '7d' });
-  res.json({ token, role: user.role });
+  try {
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) {
+      console.warn(`[Auth] Password mismatch for: ${parsedEmail}`);
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    
+    console.log(`[Auth] Login successful: ${parsedEmail} (Role: ${user.role})`);
+    const token = jwt.sign({ id: user.id, role: user.role, accountIds: user.accountIds || [] }, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ token, role: user.role });
+  } catch (err) {
+    console.error(`[Auth] Bcrypt error:`, err.message);
+    res.status(500).json({ error: 'Internal security error' });
+  }
 });
 
 // Middleware for verifying JWT
