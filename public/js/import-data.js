@@ -38,7 +38,7 @@ window.Import = {
       headers.forEach((h, i) => {
         const val = values[i] || '';
         // Auto-convert numeric fields
-        if (['contractValue','seats','activeUsers','openTickets','npsScore','productUsagePct'].includes(h)) {
+        if (['contractValue','totalRooms','occupancyPct','revPar','directBookingPct','reviewScore','openTickets','escalatedTickets'].includes(h)) {
           obj[h] = parseFloat(val) || 0;
         } else {
           obj[h] = val;
@@ -121,14 +121,14 @@ window.Import = {
   // ─── Download CSV Template ────────────────────────────────────
   downloadTemplate() {
     const headers = [
-      'name','domain','industry','csm','contractValue','contractStart','contractEnd',
-      'tier','seats','activeUsers','productUsagePct','npsScore','openTickets',
+      'name','partnerTag','industry','csm','totalRooms','contractValue','contractEnd',
+      'tier','occupancyPct','revPar','directBookingPct','reviewScore','openTickets',
       'escalatedTickets','notes','tags'
     ];
     const example = [
-      'Acme Corp','acme.com','Manufacturing','Sarah Chen','120000',
-      '2025-01-01','2026-12-31','Enterprise','150','110','73','45',
-      '3','1','Strong relationship, potential upsell','at-risk,upsell-candidate'
+      'Grande Resort','PARTNER_01','Luxury Resort','Sarah Chen','250','120000',
+      '2026-12-31','Enterprise','82','245','35','4.8',
+      '3','1','Strong performance, high direct bookings','vip-client,expansion-candidate'
     ];
 
     const csv = [headers.join(','), example.join(',')].join('\n');
