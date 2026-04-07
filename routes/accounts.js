@@ -191,14 +191,13 @@ router.get('/', (req, res) => {
   try {
     let rawAccounts = readAccounts();
     
-    // 1. Multi-tenant client filter (Restrict access)
+    // Auth & Project Filter
     if (req.user && req.user.role !== 'admin') {
       const allowed = req.user.accountIds || [];
       rawAccounts = rawAccounts.filter(acc => allowed.includes(acc.id));
-    }
-    // 2. Admin project switch (Optional filter)
-    else if (req.query.projectId && req.query.projectId !== 'all') {
-      rawAccounts = rawAccounts.filter(acc => acc.id === req.query.projectId);
+    } else if (req.query.projectId && req.query.projectId !== 'all') {
+      const ids = req.query.projectId.split(',');
+      rawAccounts = rawAccounts.filter(acc => ids.includes(acc.id));
     }
 
     const accounts = rawAccounts.map(acc => {
@@ -309,14 +308,13 @@ router.get('/meta/summary', (req, res) => {
   try {
     let raw = readAccounts();
     
-    // 1. Multi-tenant client filter
+    // Auth & Project Filter
     if (req.user && req.user.role !== 'admin') {
       const allowed = req.user.accountIds || [];
       raw = raw.filter(acc => allowed.includes(acc.id));
-    }
-    // 2. Admin project switch
-    else if (req.query.projectId && req.query.projectId !== 'all') {
-      raw = raw.filter(acc => acc.id === req.query.projectId);
+    } else if (req.query.projectId && req.query.projectId !== 'all') {
+      const ids = req.query.projectId.split(',');
+      raw = raw.filter(acc => ids.includes(acc.id));
     }
 
     const accounts = raw.map(acc => {

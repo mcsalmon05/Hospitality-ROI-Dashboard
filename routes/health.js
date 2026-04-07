@@ -19,7 +19,8 @@ router.get('/overview', (req, res) => {
       const allowed = req.user.accountIds || [];
       accounts = accounts.filter(acc => allowed.includes(acc.id));
     } else if (req.query.projectId && req.query.projectId !== 'all') {
-      accounts = accounts.filter(acc => acc.id === req.query.projectId);
+      const ids = req.query.projectId.split(',');
+      accounts = accounts.filter(acc => ids.includes(acc.id));
     }
 
     const tickets = readTickets();
@@ -83,7 +84,8 @@ router.get('/triage', (req, res) => {
       const allowed = req.user.accountIds || [];
       accounts = accounts.filter(acc => allowed.includes(acc.id));
     } else if (req.query.projectId && req.query.projectId !== 'all') {
-      accounts = accounts.filter(acc => acc.id === req.query.projectId);
+      const ids = req.query.projectId.split(',');
+      accounts = accounts.filter(acc => ids.includes(acc.id));
     }
     
     const now = new Date();
@@ -118,7 +120,8 @@ router.get('/renewals', (req, res) => {
       const allowed = req.user.accountIds || [];
       accounts = accounts.filter(acc => allowed.includes(acc.id));
     } else if (req.query.projectId && req.query.projectId !== 'all') {
-      accounts = accounts.filter(acc => acc.id === req.query.projectId);
+      const ids = req.query.projectId.split(',');
+      accounts = accounts.filter(acc => ids.includes(acc.id));
     }
 
     const now = new Date();

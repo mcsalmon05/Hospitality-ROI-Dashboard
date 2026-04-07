@@ -77,19 +77,20 @@ window.App = {
       document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
     } else {
       document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
-      await this.loadProjectSwitcher();
+      await this.loadPartnerSwitcher();
       await this.loadAccountAssignmentList();
     }
   },
 
-  async loadProjectSwitcher() {
+  async loadPartnerSwitcher() {
     try {
-      const res = await fetch(`${API}/accounts`);
-      const accounts = await res.json();
+      const res = await fetch(`${API}/users`);
+      const users = await res.json();
+      const partners = users.filter(u => u.role === 'client');
       const select = document.getElementById('global-project-filter');
-      select.innerHTML = '<option value="all">Total Portfolio View</option>';
-      accounts.sort((a,b) => a.name.localeCompare(b.name)).forEach(acc => {
-        select.innerHTML += `<option value="${acc.id}">${acc.name}</option>`;
+      select.innerHTML = '<option value="all">Global Partner Overview</option>';
+      partners.sort((a,b) => (a.name||a.email).localeCompare(b.name||b.email)).forEach(u => {
+        select.innerHTML += `<option value="${u.id}" data-accounts="${(u.accountIds || []).join(',')}">${u.name || u.email}</option>`;
       });
     } catch(e) {}
   },
@@ -110,19 +111,27 @@ window.App = {
     }
   },
 
-  async handleProjectSwitch(accountId) {
-    // If accountId is "all", it will fetch everything
-    // We already have filtering in the backend, but for the Admin, they see everything.
-    // However, if an Admin wants to "mimic" a client or just filter down the dashboard:
-    console.log(`[Project Switcher] Filtering to account: ${accountId}`);
-    window.currentProjectId = accountId === 'all' ? null : accountId;
+  async handlePartnerSwitch(userId) {
+    const select = document.getElementById('global-project-filter');
+    const option = select.options[select.selectedIndex];
+    
+    if (userId === 'all') {
+      console.log('[Partner Switcher] Showing total portfolio');
+      window.currentPartnerId = null;
+      window.currentPartnerAccounts = null;
+    } else {
+      const accountIds = option.dataset.accounts ? option.dataset.accounts.split(',') : [];
+      console.log(`[Partner Switcher] Filtering to partner: ${userId} (${accountIds.length} properties)`);
+      window.currentPartnerId = userId;
+      window.currentPartnerAccounts = accountIds;
+    }
     
     // Refresh the dashboard and other views
     await Dashboard.init();
     if (this.currentView === 'accounts') await Accounts.init();
     if (this.currentView === 'triage') await Triage.init();
     
-    this.toast(accountId === 'all' ? 'Showing Total Portfolio' : 'Project Filter Applied', 'info');
+    this.toast(userId === 'all' ? 'Showing Total Portfolio' : `Viewing ${option.text} Portfolio`, 'info');
   },
 
   async login(event) {
@@ -253,14 +262,14 @@ window.App = {
 
     // Update header
     const titles = {
-      dashboard: { title: 'Dashboard', subtitle: 'Portfolio health at a glance' },
-      accounts: { title: 'Accounts', subtitle: 'All active client accounts' },
-      triage: { title: 'Triage Queue', subtitle: 'Accounts requiring immediate attention' },
-      tickets: { title: 'Support Tickets', subtitle: 'Open and escalated issues' },
-      renewals: { title: 'Renewal Pipeline', subtitle: 'Upcoming contract renewals' },
-      intelligence: { title: 'Account Intelligence', subtitle: 'AI-powered news & signal monitoring' },
-      data: { title: 'Data Management Center', subtitle: 'Manage client portfolios and hospitality pipelines' },
-      settings: { title: 'Account Settings', subtitle: 'Manage security and access' }
+      dashboard: { title: 'Consultancy Hub', subtitle: 'Global Partner Portfolio ROI & Performance' },
+      accounts: { title: 'Partner Portfolios', subtitle: 'Active hospitality client performance by partner' },
+      triage: { title: 'Triage Queue', subtitle: 'At-risk partner accounts requiring intervention' },
+      tickets: { title: 'Support Tickets', subtitle: 'Open and escalated partner issues' },
+      renewals: { title: 'Renewal Pipeline', subtitle: 'Upcoming partner contract renewals' },
+      intelligence: { title: 'Partner Intelligence', subtitle: 'News & performance monitoring for partner properties' },
+      data: { title: 'Data Management Center', subtitle: 'Manage partners, clients, and hospitality data' },
+      settings: { title: 'Platform Settings', subtitle: 'Security and partner access management' }
     };
     const meta = titles[view] || { title: view, subtitle: '' };
     document.getElementById('page-title').textContent = meta.title;

@@ -59,7 +59,7 @@
       </a>
       <a href="#" class="nav-item" data-view="accounts" id="nav-accounts">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        <span>Portfolio</span>
+        <span>Partner Portfolios</span>
       </a>
       <a href="#" class="nav-item" data-view="triage" id="nav-triage">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -106,13 +106,13 @@
     <!-- Top Bar -->
     <header class="topbar">
       <div class="topbar-left">
-        <h1 class="page-title" id="page-title">Dashboard</h1>
-        <p class="page-subtitle" id="page-subtitle">Portfolio health at a glance</p>
+        <h1 class="page-title" id="page-title">Consultancy Hub</h1>
+        <p class="page-subtitle" id="page-subtitle">Partner ROI & Performance at a glance</p>
       </div>
       <div class="topbar-right">
         <div class="search-wrapper admin-only" id="project-switcher-wrapper" style="margin-right: 12px; min-width: 200px;">
-          <select id="global-project-filter" class="select-sm" style="width: 100%; height: 36px; background: var(--bg-card); border: 1px solid var(--border); color: white;" onchange="App.handleProjectSwitch(this.value)">
-            <option value="all">Total Portfolio View</option>
+          <select id="global-project-filter" class="select-sm" style="width: 100%; height: 36px; background: var(--bg-card); border: 1px solid var(--border); color: white;" onchange="App.handlePartnerSwitch(this.value)">
+            <option value="all">Global Partner Overview</option>
           </select>
         </div>
         <div class="search-wrapper">
@@ -221,7 +221,7 @@
               <table class="account-table" id="health-table">
                 <thead>
                   <tr>
-                    <th>Hotel</th>
+                    <th>Property Name</th>
                     <th>Health</th>
                     <th>RevPAR</th>
                     <th>Occupancy</th>
@@ -282,7 +282,7 @@
           <div class="toolbar-right admin-only">
             <button class="btn btn--primary" onclick="Accounts.showAddModal()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Add Account
+              Manual Property Intake
             </button>
           </div>
         </div>
@@ -575,41 +575,41 @@
       </div>
 
       <div class="card admin-only" style="max-width: 600px; margin: 24px auto;">
-        <h3 style="margin-bottom: 24px; color: #fff;">Admin: Create Client Account</h3>
-        <p style="color:var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">Provide login access for clients to view their portals.</p>
+        <h3 style="margin-bottom: 24px; color: #fff;">Provision CSM Partner Account</h3>
+        <p style="color:var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">Register a CSM software partner to give them access to their portfolio of property data.</p>
         
         <form id="form-create-user" onsubmit="App.createUser(event)">
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
             <div>
-              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Name</label>
-              <input type="text" id="create-user-name" class="search-input" style="width:100%; border:1px solid var(--border);" required />
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Partner Company Name</label>
+              <input type="text" id="create-user-name" class="search-input" style="width:100%; border:1px solid var(--border);" required placeholder="e.g. HospitalityConnect" />
             </div>
             <div>
-              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Email</label>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Admin Login Email</label>
               <input type="email" id="create-user-email" class="search-input" style="width:100%; border:1px solid var(--border);" required />
             </div>
           </div>
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
             <div>
-              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Role</label>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Platform Role</label>
               <select id="create-user-role" class="select-sm" style="width:100%; border:1px solid var(--border); height:38px;">
-                <option value="client">Client</option>
-                <option value="admin">Administrator</option>
+                <option value="client">CSM Partner (Restricted)</option>
+                <option value="admin">System Administrator (Full)</option>
               </select>
             </div>
             <div>
-              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Assign Temporary Password</label>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Assign Initial Password</label>
               <input type="text" id="create-user-password" class="search-input" style="width:100%; border:1px solid var(--border);" required />
             </div>
           </div>
           <div style="margin-bottom: 20px;">
-            <label style="display:block; font-size:0.8rem; margin-bottom:8px; color:var(--text-secondary);">Assign Accessible Properties</label>
+            <label style="display:block; font-size:0.8rem; margin-bottom:8px; color:var(--text-secondary);">Associate Client Properties</label>
             <div id="create-user-accounts-list" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-height: 150px; overflow-y: auto; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid var(--border);">
               <p style="color:var(--text-muted); font-size:0.75rem;">Loading properties...</p>
             </div>
           </div>
           <div style="text-align:right;">
-            <button type="submit" class="btn btn--primary">Create User Profile</button>
+            <button type="submit" class="btn btn--primary">Provision Partner Portfolio</button>
           </div>
         </form>
       </div>
