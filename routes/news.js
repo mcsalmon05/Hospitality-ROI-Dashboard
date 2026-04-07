@@ -287,10 +287,22 @@ router.delete('/alerts/dismissed', async (req, res) => {
 router.post('/recap', async (req, res) => {
   try {
     const intel = await readIntelligence();
-    const alerts = Array.isArray(intel) ? intel : (intel.alerts || []);
-    const accounts = await readAccounts();
+    let alerts = Array.isArray(intel) ? intel : (intel.alerts || []);
+    let accounts = await readAccounts();
     
-    // Logic to select high-priority signals from the last 24 hours
+    // Auth filtering
+    if (req.user && req.user.role !== 'admin') {
+      const pTag = req.user.partnerTag;
+      accounts = accounts.filter(acc => acc.partnerTag === pTag);
+      const myAccountIds = accounts.map(acc => acc.id);
+      alerts = alerts.filter(a => myAccountIds.includes(a.accountId));
+    } else if (req.query.partnerTag && req.query.partnerTag !== 'all') {
+      const pTag = req.query.partnerTag;
+      accounts = accounts.filter(acc => acc.partnerTag === pTag);
+      const myAccountIds = accounts.map(acc => acc.id);
+      alerts = alerts.filter(a => myAccountIds.includes(a.accountId));
+    }
+    
     const criticalAlerts = alerts.filter(a => a.level === 'critical').slice(0, 3);
     const topPerformers = [...accounts].sort((a, b) => b.revPar - a.revPar).slice(0, 2);
     const atRisk = accounts.filter(a => a.occupancyPct < 50);
@@ -299,13 +311,14 @@ router.post('/recap', async (req, res) => {
       timestamp: new Date().toISOString(),
       summary: `Portfolio assessment complete. Identified ${criticalAlerts.length} high-risk signals and ${atRisk.length} occupancy warnings.`,
       highlights: [
-        ...criticalAlerts.map(a => `High Risk: ${a.source} reports ${a.title} for ${a.accountName}.`),
+        ...criticalAlerts.map(a => `High Risk: ${a.source} reports ${a.title} for ${a.accountName || 'Partner'}.`),
         ...atRisk.map(a => `Occupancy Warning: ${a.name} is tracking at ${a.occupancyPct}%. Suggesting dynamic pricing audit.`),
         ...topPerformers.map(a => `ROI Leader: ${a.name} hit an ADR of $${a.adr} this cycle.`)
       ],
       escalations: criticalAlerts.length > 0 ? "Immediate CSM intervention required for critical sentiment drops." : "No immediate escalations required."
     };
 
+    // Still persist to fallback file for legacy crons if needed
     fs.writeFileSync(path.join(__dirname, '../data/recap.json'), JSON.stringify(briefing, null, 2));
     res.json(briefing);
   } catch (err) {
@@ -313,13 +326,42 @@ router.post('/recap', async (req, res) => {
   }
 });
 
-// GET latest recap
-router.get('/recap', (req, res) => {
+// GET latest recap (Dynamically synthesized to ensure it is always up to date)
+router.get('/recap', async (req, res) => {
   try {
-    const recapPath = path.join(__dirname, '../data/recap.json');
-    if (!fs.existsSync(recapPath)) return res.json({ summary: "No briefing generated yet today.", highlights: [] });
-    const recap = JSON.parse(fs.readFileSync(recapPath, 'utf8'));
-    res.json(recap);
+    const intel = await readIntelligence();
+    let alerts = Array.isArray(intel) ? intel : (intel.alerts || []);
+    let accounts = await readAccounts();
+
+    // Auth filtering
+    if (req.user && req.user.role !== 'admin') {
+      const pTag = req.user.partnerTag;
+      accounts = accounts.filter(acc => acc.partnerTag === pTag);
+      const myAccountIds = accounts.map(acc => acc.id);
+      alerts = alerts.filter(a => myAccountIds.includes(a.accountId));
+    } else if (req.query.partnerTag && req.query.partnerTag !== 'all') {
+      const pTag = req.query.partnerTag;
+      accounts = accounts.filter(acc => acc.partnerTag === pTag);
+      const myAccountIds = accounts.map(acc => acc.id);
+      alerts = alerts.filter(a => myAccountIds.includes(a.accountId));
+    }
+
+    const criticalAlerts = alerts.filter(a => a.level === 'critical').slice(0, 3);
+    const topPerformers = [...accounts].sort((a, b) => b.revPar - a.revPar).slice(0, 2);
+    const atRisk = accounts.filter(a => a.occupancyPct < 50);
+
+    const briefing = {
+      timestamp: new Date().toISOString(),
+      summary: `Portfolio assessment complete. Identified ${criticalAlerts.length} high-risk signals and ${atRisk.length} occupancy warnings.`,
+      highlights: [
+        ...criticalAlerts.map(a => `High Risk: ${a.source} reports ${a.title} for ${a.accountName || 'Partner'}.`),
+        ...atRisk.map(a => `Occupancy Warning: ${a.name} is tracking at ${a.occupancyPct}%. Suggesting dynamic pricing audit.`),
+        ...topPerformers.map(a => `ROI Leader: ${a.name} hit an ADR of $${a.adr} this cycle.`)
+      ],
+      escalations: criticalAlerts.length > 0 ? "Immediate CSM intervention required for critical sentiment drops." : "No immediate escalations required."
+    };
+
+    res.json(briefing);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
