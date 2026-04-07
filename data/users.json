@@ -6,5 +6,13 @@
     "role": "admin",
     "name": "Super Admin",
     "partnerTag": "csm-global"
+  },
+  {
+    "id": "u-testpilot",
+    "email": "consultant@testpilot.com",
+    "password": "$2b$10$dim.d8qeg4eygNaGcSYq1.LnSchCnQtCNjp2BEgTZ/B0vFmU.Hnae", 
+    "role": "client",
+    "name": "Test Pilot Consultancy",
+    "partnerTag": "testpilot"
   }
 ]

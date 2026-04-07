@@ -198,9 +198,9 @@ function getDaysToRenewal(contractEnd) {
 }
 
 // GET all accounts
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
   try {
-    let rawAccounts = readAccounts();
+    let rawAccounts = await readAll('accounts', DATA_PATH);
     
     // Auth & Project Filter
     if (req.user && req.user.role !== 'admin') {
@@ -234,9 +234,9 @@ router.get('/', (req, res) => {
 });
 
 // GET single account with score breakdown
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
   try {
-    const accounts = readAccounts();
+    const accounts = await readAll('accounts', DATA_PATH);
     const acc = accounts.find(a => a.id === req.params.id);
     if (!acc) return res.status(404).json({ error: 'Account not found' });
     
