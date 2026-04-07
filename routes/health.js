@@ -12,7 +12,16 @@ const readTickets = () => JSON.parse(fs.readFileSync(TICKETS_PATH, 'utf8'));
 // GET full portfolio health overview
 router.get('/overview', (req, res) => {
   try {
-    const accounts = readAccounts();
+    let accounts = readAccounts();
+    
+    // Auth filter
+    if (req.user && req.user.role !== 'admin') {
+      const allowed = req.user.accountIds || [];
+      accounts = accounts.filter(acc => allowed.includes(acc.id));
+    } else if (req.query.projectId && req.query.projectId !== 'all') {
+      accounts = accounts.filter(acc => acc.id === req.query.projectId);
+    }
+
     const tickets = readTickets();
     const now = new Date();
 
@@ -67,9 +76,17 @@ router.get('/overview', (req, res) => {
 // GET triage queue — accounts needing immediate action
 router.get('/triage', (req, res) => {
   try {
-    const accounts = readAccounts();
+    let accounts = readAccounts();
+    
+    // Auth filter
+    if (req.user && req.user.role !== 'admin') {
+      const allowed = req.user.accountIds || [];
+      accounts = accounts.filter(acc => allowed.includes(acc.id));
+    } else if (req.query.projectId && req.query.projectId !== 'all') {
+      accounts = accounts.filter(acc => acc.id === req.query.projectId);
+    }
+    
     const now = new Date();
-
     const triage = accounts
       .map(acc => {
         const daysToRenewal = Math.ceil((new Date(acc.contractEnd) - now) / 86400000);
@@ -94,7 +111,16 @@ router.get('/triage', (req, res) => {
 // GET renewal pipeline
 router.get('/renewals', (req, res) => {
   try {
-    const accounts = readAccounts();
+    let accounts = readAccounts();
+    
+    // Auth filter
+    if (req.user && req.user.role !== 'admin') {
+      const allowed = req.user.accountIds || [];
+      accounts = accounts.filter(acc => allowed.includes(acc.id));
+    } else if (req.query.projectId && req.query.projectId !== 'all') {
+      accounts = accounts.filter(acc => acc.id === req.query.projectId);
+    }
+
     const now = new Date();
     const renewals = accounts
       .map(acc => ({

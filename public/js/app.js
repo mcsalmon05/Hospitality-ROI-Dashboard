@@ -17,6 +17,12 @@ window.fetch = async function() {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
   }
+
+  // Auto-apply project filter if set
+  if (window.currentProjectId && typeof resource === 'string' && resource.includes('/api/')) {
+    const separator = resource.includes('?') ? '&' : '?';
+    resource = `${resource}${separator}projectId=${window.currentProjectId}`;
+  }
   
   const res = await originalFetch(resource, config);
   if (res.status === 401 && (!resource || !resource.toString().includes('/auth/login'))) {
@@ -60,17 +66,63 @@ window.App = {
     }
   },
 
-  showApp() {
+  async showApp() {
     document.getElementById('login-overlay').style.display = 'none';
     const appContainer = document.getElementById('app-container');
     appContainer.style.visibility = 'visible';
     appContainer.style.opacity = '1';
     
-    if (localStorage.getItem('csm_role') !== 'admin') {
+    const role = localStorage.getItem('csm_role');
+    if (role !== 'admin') {
       document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
     } else {
       document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+      await this.loadProjectSwitcher();
+      await this.loadAccountAssignmentList();
     }
+  },
+
+  async loadProjectSwitcher() {
+    try {
+      const res = await fetch(`${API}/accounts`);
+      const accounts = await res.json();
+      const select = document.getElementById('global-project-filter');
+      select.innerHTML = '<option value="all">Total Portfolio View</option>';
+      accounts.sort((a,b) => a.name.localeCompare(b.name)).forEach(acc => {
+        select.innerHTML += `<option value="${acc.id}">${acc.name}</option>`;
+      });
+    } catch(e) {}
+  },
+
+  async loadAccountAssignmentList() {
+    const list = document.getElementById('create-user-accounts-list');
+    try {
+      const res = await fetch(`${API}/accounts`);
+      const accounts = await res.json();
+      list.innerHTML = accounts.map(acc => `
+        <label style="display: flex; align-items: center; gap: 8px; color: white; font-size: 0.8rem; cursor: pointer;">
+          <input type="checkbox" name="assign-account" value="${acc.id}" style="width: 14px; height: 14px;">
+          <span>${acc.name}</span>
+        </label>
+      `).join('');
+    } catch (e) {
+      list.innerHTML = '<p style="color:var(--accent-red); font-size:0.75rem;">Error loading properties</p>';
+    }
+  },
+
+  async handleProjectSwitch(accountId) {
+    // If accountId is "all", it will fetch everything
+    // We already have filtering in the backend, but for the Admin, they see everything.
+    // However, if an Admin wants to "mimic" a client or just filter down the dashboard:
+    console.log(`[Project Switcher] Filtering to account: ${accountId}`);
+    window.currentProjectId = accountId === 'all' ? null : accountId;
+    
+    // Refresh the dashboard and other views
+    await Dashboard.init();
+    if (this.currentView === 'accounts') await Accounts.init();
+    if (this.currentView === 'triage') await Triage.init();
+    
+    this.toast(accountId === 'all' ? 'Showing Total Portfolio' : 'Project Filter Applied', 'info');
   },
 
   async login(event) {
@@ -94,6 +146,7 @@ window.App = {
       if (res.ok && data.token) {
         localStorage.setItem('csm_token', data.token);
         localStorage.setItem('csm_role', data.role); // Store role for UI state
+        localStorage.setItem('csm_user_id', data.id); // Helpful for settings
         this.showApp();
         this.setupNavigation();
         this.setupSearch();
@@ -113,6 +166,7 @@ window.App = {
 
   logout() {
     localStorage.removeItem('csm_token');
+    localStorage.removeItem('csm_role');
     window.location.reload();
   },
 
@@ -159,6 +213,8 @@ window.App = {
     const role = document.getElementById('create-user-role').value;
     const password = document.getElementById('create-user-password').value;
     
+    const accountIds = Array.from(document.querySelectorAll('input[name="assign-account"]:checked')).map(cb => cb.value);
+    
     const btn = event.target.querySelector('button[type="submit"]');
     const og = btn.textContent;
     btn.textContent = 'Creating...';
@@ -168,7 +224,7 @@ window.App = {
       const res = await fetch(`${API}/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, role, password })
+        body: JSON.stringify({ name, email, role, password, accountIds })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to create user');

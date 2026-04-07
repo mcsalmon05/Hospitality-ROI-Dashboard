@@ -189,7 +189,19 @@ function getDaysToRenewal(contractEnd) {
 // GET all accounts
 router.get('/', (req, res) => {
   try {
-    const accounts = readAccounts().map(acc => {
+    let rawAccounts = readAccounts();
+    
+    // 1. Multi-tenant client filter (Restrict access)
+    if (req.user && req.user.role !== 'admin') {
+      const allowed = req.user.accountIds || [];
+      rawAccounts = rawAccounts.filter(acc => allowed.includes(acc.id));
+    }
+    // 2. Admin project switch (Optional filter)
+    else if (req.query.projectId && req.query.projectId !== 'all') {
+      rawAccounts = rawAccounts.filter(acc => acc.id === req.query.projectId);
+    }
+
+    const accounts = rawAccounts.map(acc => {
       const healthScore = calculateHealthScore(acc);
       return {
         ...acc,
@@ -210,6 +222,13 @@ router.get('/:id', (req, res) => {
     const accounts = readAccounts();
     const acc = accounts.find(a => a.id === req.params.id);
     if (!acc) return res.status(404).json({ error: 'Account not found' });
+    
+    // Auth restrict
+    if (req.user && req.user.role !== 'admin') {
+      const allowed = req.user.accountIds || [];
+      if (!allowed.includes(acc.id)) return res.status(403).json({ error: 'Access denied to this property.' });
+    }
+
     const healthScore = calculateHealthScore(acc);
     const scoreBreakdown = getScoreBreakdown(acc);
     res.json({ ...acc, healthScore, status: getStatus(healthScore), daysToRenewal: getDaysToRenewal(acc.contractEnd), scoreBreakdown });
@@ -288,11 +307,23 @@ router.post('/import/bulk', (req, res) => {
 // GET summary stats (Hotel Portfolio ROI)
 router.get('/meta/summary', (req, res) => {
   try {
-    const raw = readAccounts();
+    let raw = readAccounts();
+    
+    // 1. Multi-tenant client filter
+    if (req.user && req.user.role !== 'admin') {
+      const allowed = req.user.accountIds || [];
+      raw = raw.filter(acc => allowed.includes(acc.id));
+    }
+    // 2. Admin project switch
+    else if (req.query.projectId && req.query.projectId !== 'all') {
+      raw = raw.filter(acc => acc.id === req.query.projectId);
+    }
+
     const accounts = raw.map(acc => {
       const healthScore = calculateHealthScore(acc);
       return { ...acc, healthScore, status: getStatus(healthScore), daysToRenewal: getDaysToRenewal(acc.contractEnd) };
     });
+    
     const totalPortfolioRev = accounts.reduce((sum, a) => sum + (a.contractValue || 0), 0);
     const totalExpansion = accounts.reduce((sum, a) => sum + (a.expansionRevenue || 0), 0);
     const atRisk = accounts.filter(a => a.status === 'At Risk');
