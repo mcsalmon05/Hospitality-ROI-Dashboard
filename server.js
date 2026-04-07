@@ -11,6 +11,7 @@ const settingsRouter = require('./routes/settings');
 const { router: usersRouter, authMiddleware } = require('./routes/users');
 const { runIntelligenceScrub } = require('./routes/news');
 const { isCloud, readAll, writeOne } = require('./services/db');
+const { SEED_ACCOUNTS, SEED_USERS } = require('./services/seedData');
 const fs = require('fs');
 
 const app = express();
@@ -73,37 +74,31 @@ const startDailyScheduler = () => {
   });
 };
 
-// ─── Auto-Seed Cloud Data ──────────────────────────────────
+// ─── Auto-Seed Cloud Data (Fail-Safe) ──────────────────────
 const seedDatabase = async () => {
   if (!isCloud) return;
   try {
     const dataDir = path.join(__dirname, 'data');
-    console.log('[Cloud Seed] Integrity Check. Directory structure:', fs.existsSync(dataDir) ? fs.readdirSync(dataDir) : 'NO DATA DIR');
-    
     const accPath = path.join(dataDir, 'accounts.json');
-    const userPath = path.join(dataDir, 'users.json');
-
-    const existing = await readAll('accounts', accPath);
     
-    // Specifically check if Test Pilot properties are in Cloud
+    // Check cloud for existing properties
+    const existing = await readAll('accounts', accPath);
     const hasTestPilot = existing.some(a => a.partnerTag === 'testpilot');
     
     if (!hasTestPilot || existing.length < 5) {
-      console.log('[Cloud Seed] Seeding Test Pilot portfolio to Firestore...');
-      if (!fs.existsSync(accPath) || !fs.existsSync(userPath)) {
-        throw new Error(`Seed source files missing! Found in data/: ${fs.readdirSync(dataDir)}`);
-      }
+      console.log('[Cloud Seed] Initializing Firestore from FAIL-SAFE embedded data...');
       
-      const localAcc = JSON.parse(fs.readFileSync(accPath, 'utf8'));
-      for (const a of localAcc) {
+      // Push Accounts
+      for (const a of SEED_ACCOUNTS) {
         await writeOne('accounts', a.id, a);
       }
       
-      const localUsers = JSON.parse(fs.readFileSync(userPath, 'utf8'));
-      for (const u of localUsers) {
+      // Push Users
+      for (const u of SEED_USERS) {
         await writeOne('users', u.id, u);
       }
-      console.log('[Cloud Seed] Seeding complete.');
+      
+      console.log('[Cloud Seed] Provisoning complete: 11 properties & partners live.');
     }
   } catch (err) {
     console.error('[Cloud Seed] Persistence error:', err.message);
