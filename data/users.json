@@ -5,6 +5,6 @@
     "password": "$2b$10$dim.d8qeg4eygNaGcSYq1.LnSchCnQtCNjp2BEgTZ/B0vFmU.Hnae", 
     "role": "admin",
     "name": "Super Admin",
-    "accountIds": []
+    "partnerTag": "csm-global"
   }
 ]

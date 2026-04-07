@@ -228,38 +228,6 @@ window.App = {
     }
   },
 
-  async createUser(event) {
-    event.preventDefault();
-    const name = document.getElementById('create-user-name').value;
-    const email = document.getElementById('create-user-email').value;
-    const role = document.getElementById('create-user-role').value;
-    const password = document.getElementById('create-user-password').value;
-    
-    const accountIds = Array.from(document.querySelectorAll('input[name="assign-account"]:checked')).map(cb => cb.value);
-    
-    const btn = event.target.querySelector('button[type="submit"]');
-    const og = btn.textContent;
-    btn.textContent = 'Creating...';
-    btn.disabled = true;
-
-    try {
-      const res = await fetch(`${API}/users`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, role, password, accountIds })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to create user');
-      App.toast(`User ${name} created successfully!`, 'success');
-      document.getElementById('form-create-user').reset();
-    } catch (err) {
-      App.toast(err.message, 'error');
-    } finally {
-      btn.textContent = og;
-      btn.disabled = false;
-    }
-  },
-
   navigate(view) {
     // Update nav
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
