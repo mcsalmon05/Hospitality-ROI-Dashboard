@@ -42,19 +42,21 @@ router.get('/overview', async (req, res) => {
       accounts = accounts.filter(acc => ids.includes(acc.id));
     }
 
-    const tickets = readTickets();
+    const tickets = await readAll('tickets', TICKETS_PATH);
     const now = new Date();
 
     const enriched = accounts.map(acc => {
       const daysToRenewal = Math.ceil((new Date(acc.contractEnd) - now) / 86400000);
       const accTickets = tickets.filter(t => t.accountId === acc.id);
+      const openCount = accTickets.filter(t => t.status !== 'Resolved').length;
+      const escalatedCount = accTickets.filter(t => t.status === 'Escalated').length;
 
       const actions = [];
       if (daysToRenewal <= 30) actions.push({ type: 'RENEWAL_CRITICAL', message: `Renewal in ${daysToRenewal} days — start save/close process immediately` });
       else if (daysToRenewal <= 90) actions.push({ type: 'RENEWAL_WARNING', message: `Renewal in ${daysToRenewal} days — schedule QBR and renewal conversation` });
 
-      if (acc.escalatedTickets > 0) actions.push({ type: 'ESCALATED_TICKETS', message: `${acc.escalatedTickets} escalated ticket(s) require executive attention` });
-      if (acc.openTickets > 7) actions.push({ type: 'HIGH_TICKET_VOLUME', message: `${acc.openTickets} open tickets — potential dissatisfaction signal` });
+      if (escalatedCount > 0) actions.push({ type: 'ESCALATED_TICKETS', message: `${escalatedCount} escalated ticket(s) require executive attention` });
+      if (openCount > 5) actions.push({ type: 'HIGH_TICKET_VOLUME', message: `${openCount} open tickets — potential dissatisfaction signal` });
       if ((acc.productUsagePct || 0) < 40) actions.push({ type: 'LOW_ADOPTION', message: `Product adoption at ${acc.productUsagePct}% — schedule onboarding/training session` });
       if ((acc.npsScore || 0) < 30) actions.push({ type: 'LOW_NPS', message: `NPS score of ${acc.npsScore} — account is actively dissatisfied` });
 
@@ -65,18 +67,13 @@ router.get('/overview', async (req, res) => {
       if ((acc.npsScore || 0) > 60) upsellSignals.push('High NPS — strong candidate for advocacy/referral program');
 
       return {
-        id: acc.id,
-        name: acc.name,
-        csm: acc.csm,
-        tier: acc.tier,
-        contractValue: acc.contractValue,
+        ...acc,
         daysToRenewal,
-        healthScore: acc.healthScore,
-        status: acc.status,
         requiredActions: actions,
         upsellSignals,
-        ticketCount: accTickets.length,
-        escalatedCount: accTickets.filter(t => t.status === 'Escalated').length
+        openTickets: openCount,
+        escalatedTickets: escalatedCount,
+        ticketCount: accTickets.length
       };
     });
 
@@ -113,20 +110,35 @@ router.get('/triage', async (req, res) => {
       accounts = accounts.filter(acc => ids.includes(acc.id));
     }
     
+    const tickets = await readAll('tickets', TICKETS_PATH);
     const now = new Date();
+    
     const triage = accounts
       .map(acc => {
+        // Calculate LIVE ticket counts instead of relying on static seed values
+        const accTickets = tickets.filter(t => t.accountId === acc.id);
+        const liveOpen = accTickets.filter(t => t.status !== 'Resolved').length;
+        const liveEscalated = accTickets.filter(t => t.status === 'Escalated').length;
+
         const daysToRenewal = Math.ceil((new Date(acc.contractEnd) - now) / 86400000);
+        
+        // Use live counts for urgency calculation
         const urgencyScore =
           (daysToRenewal < 30 ? 40 : daysToRenewal < 60 ? 20 : 0) +
-          ((acc.escalatedTickets || 0) * 10) +
-          ((acc.openTickets || 0) * 3) +
+          (liveEscalated * 12) + // Escalated tickets are heavy weights
+          (liveOpen * 4) +       // Any open ticket adds urgency
           ((acc.productUsagePct || 100) < 40 ? 15 : 0) +
           ((acc.npsScore || 100) < 25 ? 20 : 0);
 
-        return { ...acc, daysToRenewal, urgencyScore };
+        return { 
+          ...acc, 
+          openTickets: liveOpen, 
+          escalatedTickets: liveEscalated,
+          daysToRenewal, 
+          urgencyScore 
+        };
       })
-      .filter(acc => acc.urgencyScore > 20)
+      .filter(acc => acc.urgencyScore > 10) // Lower threshold to ensure your seed tickets show up
       .sort((a, b) => b.urgencyScore - a.urgencyScore);
 
     res.json(triage);
