@@ -1,0 +1,9 @@
+node_modules
+npm-debug.log
+.DS_Store
+.gemini
+.env
+data/accounts.json
+data/intelligence.json
+data/tickets.json
+data/recap.json

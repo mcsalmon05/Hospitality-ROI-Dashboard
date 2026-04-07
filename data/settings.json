@@ -1,0 +1,24 @@
+{
+  "appName": "CSM Intelligence Dashboard",
+  "scrubSchedule": "daily",
+  "scrubTime": "08:00",
+  "alertThresholds": {
+    "renewalWarningDays": 90,
+    "renewalCriticalDays": 30,
+    "ticketWarningCount": 5,
+    "ticketCriticalCount": 10,
+    "healthScoreWarning": 70,
+    "healthScoreCritical": 50
+  },
+  "newsKeywords": {
+    "critical": ["bankrupt", "bankruptcy", "closure", "shutting down", "out of business", "liquidat"],
+    "high": ["layoffs", "laid off", "job cuts", "acquired", "acquisition", "merger", "acquires"],
+    "medium": ["CEO", "new CEO", "CPO", "leadership change", "restructur", "reorganiz", "downsiz"],
+    "positive": ["funding", "Series A", "Series B", "Series C", "IPO", "raises", "growth", "expansion", "award"]
+  },
+  "team": [
+    { "name": "Sarah Chen", "email": "sarah@company.com", "role": "CSM" },
+    { "name": "Marcus Webb", "email": "marcus@company.com", "role": "CSM" },
+    { "name": "Jordan Lee", "email": "jordan@company.com", "role": "CSM" }
+  ]
+}
