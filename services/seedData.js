@@ -212,6 +212,63 @@ const SEED_ACCOUNTS = [
     "reviewScore": 4.0,
     "openTickets": 3,
     "paymentStatus": "good"
+  },
+  {
+    "id": "hotel-t2001",
+    "name": "Test Client Plaza",
+    "industry": "Corporate Hotel",
+    "partnerTag": "testclient2",
+    "csm": "Morgan Lee",
+    "contractValue": 21000,
+    "contractEnd": "2027-04-10",
+    "status": "Healthy",
+    "healthScore": 88,
+    "totalRooms": 350,
+    "occupancyPct": 82,
+    "adr": 310,
+    "revPar": 254,
+    "directBookingPct": 42,
+    "reviewScore": 4.6,
+    "openTickets": 0,
+    "paymentStatus": "good"
+  },
+  {
+    "id": "hotel-t2002",
+    "name": "Test Client Seaside",
+    "industry": "Resort & Spa",
+    "partnerTag": "testclient2",
+    "csm": "Morgan Lee",
+    "contractValue": 28000,
+    "contractEnd": "2026-09-20",
+    "status": "Healthy",
+    "healthScore": 91,
+    "totalRooms": 400,
+    "occupancyPct": 85,
+    "adr": 450,
+    "revPar": 382,
+    "directBookingPct": 55,
+    "reviewScore": 4.8,
+    "openTickets": 1,
+    "paymentStatus": "good"
+  },
+  {
+    "id": "hotel-t2003",
+    "name": "Test Client Budget",
+    "industry": "Economy",
+    "partnerTag": "testclient2",
+    "csm": "Morgan Lee",
+    "contractValue": 5500,
+    "contractEnd": "2026-05-15",
+    "status": "Critical",
+    "healthScore": 31,
+    "totalRooms": 80,
+    "occupancyPct": 45,
+    "adr": 85,
+    "revPar": 38,
+    "directBookingPct": 12,
+    "reviewScore": 3.2,
+    "openTickets": 4,
+    "paymentStatus": "late"
   }
 ];
 
@@ -229,6 +286,13 @@ const SEED_USERS = [
     "role": "client",
     "name": "Test Pilot",
     "partnerTag": "testpilot"
+  },
+  {
+    "id": "u-testclient2",
+    "email": "manager@testclient2.com",
+    "role": "client",
+    "name": "Test Client 2",
+    "partnerTag": "testclient2"
   }
 ];
 

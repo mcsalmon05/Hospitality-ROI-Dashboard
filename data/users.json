@@ -12,5 +12,12 @@
     "role": "client",
     "name": "Test Pilot",
     "partnerTag": "testpilot"
+  },
+  {
+    "id": "u-testclient2",
+    "email": "manager@testclient2.com",
+    "role": "client",
+    "name": "Test Client 2",
+    "partnerTag": "testclient2"
   }
 ]
