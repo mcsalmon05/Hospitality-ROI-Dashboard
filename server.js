@@ -64,20 +64,29 @@ const startDailyScheduler = () => {
 const seedDatabase = async () => {
   if (!isCloud) return;
   try {
-    console.log('[Cloud Seed] Verifying system integrity...');
-    const existing = await readAll('accounts', path.join(__dirname, 'data/accounts.json'));
+    const dataDir = path.join(__dirname, 'data');
+    console.log('[Cloud Seed] Integrity Check. Directory structure:', fs.existsSync(dataDir) ? fs.readdirSync(dataDir) : 'NO DATA DIR');
+    
+    const accPath = path.join(dataDir, 'accounts.json');
+    const userPath = path.join(dataDir, 'users.json');
+
+    const existing = await readAll('accounts', accPath);
     
     // Specifically check if Test Pilot properties are in Cloud
     const hasTestPilot = existing.some(a => a.partnerTag === 'testpilot');
     
     if (!hasTestPilot || existing.length < 5) {
       console.log('[Cloud Seed] Seeding Test Pilot portfolio to Firestore...');
-      const localAcc = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/accounts.json'), 'utf8'));
+      if (!fs.existsSync(accPath) || !fs.existsSync(userPath)) {
+        throw new Error(`Seed source files missing! Found in data/: ${fs.readdirSync(dataDir)}`);
+      }
+      
+      const localAcc = JSON.parse(fs.readFileSync(accPath, 'utf8'));
       for (const a of localAcc) {
         await writeOne('accounts', a.id, a);
       }
       
-      const localUsers = JSON.parse(fs.readFileSync(path.join(__dirname, 'data/users.json'), 'utf8'));
+      const localUsers = JSON.parse(fs.readFileSync(userPath, 'utf8'));
       for (const u of localUsers) {
         await writeOne('users', u.id, u);
       }
