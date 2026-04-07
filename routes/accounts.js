@@ -28,9 +28,10 @@ const writeAccounts = async (accounts) => {
   
   // Cloud Sync (Mirroring)
   if (isCloud) {
-    for (const acc of accounts) {
-      await writeOne('accounts', acc.id || acc.name, acc, DATA_PATH);
-    }
+    // Parallelize writes for performance
+    await Promise.all(accounts.map(acc => 
+      writeOne('accounts', acc.id || acc.name, acc, DATA_PATH)
+    ));
   }
 };
 

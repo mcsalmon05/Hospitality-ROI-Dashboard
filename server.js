@@ -31,7 +31,7 @@ const startDailyScheduler = () => {
       const fetch = require('node-fetch');
       const jwt = require('jsonwebtoken');
       const mockToken = jwt.sign({ id: 'system', role: 'admin' }, process.env.JWT_SECRET || 'secret123');
-      await fetch('http://localhost:3000/api/news/scrub', { 
+      await fetch(`http://localhost:${PORT}/api/news/scrub`, { 
         method: 'POST',
         headers: { 'Authorization': `Bearer ${mockToken}` }
       });
@@ -47,7 +47,7 @@ const startDailyScheduler = () => {
       const fetch = require('node-fetch');
       const jwt = require('jsonwebtoken');
       const mockToken = jwt.sign({ id: 'system', role: 'admin' }, process.env.JWT_SECRET || 'secret123');
-      await fetch('http://localhost:3000/api/news/recap', { 
+      await fetch(`http://localhost:${PORT}/api/news/recap`, { 
         method: 'POST',
         headers: { 'Authorization': `Bearer ${mockToken}` }
       });

@@ -27,9 +27,9 @@ const writeTickets = async (tickets) => {
 
   // Cloud Mirroring (Sync to Google)
   if (isCloud) {
-    for (const t of tickets) {
-      await writeOne('tickets', t.id, t, TICKETS_PATH);
-    }
+    await Promise.all(tickets.map(t => 
+      writeOne('tickets', t.id, t, TICKETS_PATH)
+    ));
   }
 };
 
