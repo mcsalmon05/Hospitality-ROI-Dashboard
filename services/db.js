@@ -8,10 +8,15 @@ let isCloud = false;
 
 try {
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
-    });
+    if (!admin.apps.length) {
+      const b64 = process.env.FIREBASE_SERVICE_ACCOUNT;
+      // Handle potential Base64 encoding if needed, or just JSON
+      const config = b64.startsWith('{') ? b64 : Buffer.from(b64, 'base64').toString();
+      const serviceAccount = JSON.parse(config);
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+    }
     isCloud = true;
     console.log('✅ Google Firestore: Connected (Live Cloud Persistence)');
   } else {
@@ -19,6 +24,7 @@ try {
   }
 } catch (err) {
   console.error('❌ Google Firestore: Error initialization:', err.message);
+  isCloud = false; // Force fallback
 }
 
 const db = isCloud ? admin.firestore() : null;
@@ -32,24 +38,40 @@ const collections = {
   users: 'dashboard_users'
 };
 
-const getCollection = (key) => db ? db.collection(collections[key]) : null;
+const getCollection = (key) => {
+  if (!db) return null;
+  return db.collection(collections[key]);
+};
 
 // --- Unified Data Access Logic ---
 const readAll = async (key, localPath) => {
-  if (isCloud) {
-    const snapshot = await getCollection(key).get();
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } else {
+  try {
+    if (isCloud && db) {
+      const coll = getCollection(key);
+      if (coll) {
+        const snapshot = await coll.get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      }
+    }
     return JSON.parse(fs.readFileSync(localPath, 'utf8'));
+  } catch (e) {
+    console.warn(`[DB] Fallback for ${key}:`, e.message);
+    try { return JSON.parse(fs.readFileSync(localPath, 'utf8')); } catch(e2) { return []; }
   }
 };
 
 const writeOne = async (key, id, data) => {
-  if (isCloud) {
-    await getCollection(key).doc(id).set(data, { merge: true });
-  } else {
-    // Local persistence still works for dev
+  try {
+    if (isCloud && db) {
+      const coll = getCollection(key);
+      if (coll) {
+        await coll.doc(id).set(data, { merge: true });
+        return;
+      }
+    }
     console.log(`[Local Write] Persisting ${id} to ${key}`);
+  } catch (e) {
+    console.error(`[DB] Write failure for ${key}:`, e.message);
   }
 };
 
