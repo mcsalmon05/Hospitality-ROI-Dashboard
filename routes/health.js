@@ -1,8 +1,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-
-const { ensureDataDir } = require('../services/db');
+const { readAll, ensureDataDir } = require('../services/db');
 const router = express.Router();
 const ACCOUNTS_PATH = path.join(__dirname, '../data/accounts.json');
 const TICKETS_PATH = path.join(__dirname, '../data/tickets.json');
@@ -24,9 +23,9 @@ const readAccounts = () => safeRead(ACCOUNTS_PATH);
 const readTickets = () => safeRead(TICKETS_PATH);
 
 // GET full portfolio health overview
-router.get('/overview', (req, res) => {
+router.get('/overview', async (req, res) => {
   try {
-    let accounts = readAccounts();
+    let accounts = await readAll('accounts', ACCOUNTS_PATH);
     
     // Auth filter
     if (req.user && req.user.role !== 'admin') {
