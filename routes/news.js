@@ -118,7 +118,7 @@ async function scrapeCompanyNews(account) {
 async function runIntelligenceScrub(options = {}) {
   console.log('[Intelligence] Starting scrub...');
   const accounts = readAccounts();
-  const intel = readIntel();
+  const intel = readIntelligence();
   const existingIds = new Set((intel.alerts || []).map(a => a.link));
 
   const allNewAlerts = [];
@@ -143,7 +143,7 @@ async function runIntelligenceScrub(options = {}) {
     nextScrub: getNextScrubTime(),
     alerts: combined
   };
-  writeIntel(updated);
+  writeIntelligence(updated);
   console.log(`[Intelligence] Scrub complete. Found ${allNewAlerts.length} new alerts.`);
   return { newAlerts: allNewAlerts.length, total: combined.length };
 }
@@ -160,7 +160,7 @@ function getNextScrubTime() {
 // GET all alerts
 router.get('/alerts', (req, res) => {
   try {
-    const intel = readIntel();
+    const intel = readIntelligence();
     let alerts = intel.alerts || [];
 
     if (req.query.accountId) {
@@ -186,7 +186,7 @@ router.get('/alerts', (req, res) => {
 // GET intelligence summary
 router.get('/summary', (req, res) => {
   try {
-    const intel = readIntel();
+    const intel = readIntelligence();
     const alerts = intel.alerts || [];
     const active = alerts.filter(a => !a.dismissed);
     res.json({
@@ -223,11 +223,11 @@ router.post('/scrub/:accountId', async (req, res) => {
     if (!account) return res.status(404).json({ error: 'Account not found' });
 
     const alerts = await scrapeCompanyNews(account);
-    const intel = readIntel();
+    const intel = readIntelligence();
     const existingIds = new Set((intel.alerts || []).map(a => a.link));
     const newAlerts = alerts.filter(a => !existingIds.has(a.link));
     const combined = [...newAlerts, ...(intel.alerts || [])].slice(0, 200);
-    writeIntel({ ...intel, alerts: combined, lastScrub: new Date().toISOString() });
+    writeIntelligence({ ...intel, alerts: combined, lastScrub: new Date().toISOString() });
 
     res.json({ message: `Scrub complete for ${account.name}`, newAlerts: newAlerts.length });
   } catch (err) {
@@ -238,11 +238,11 @@ router.post('/scrub/:accountId', async (req, res) => {
 // PUT dismiss an alert
 router.put('/alerts/:id/dismiss', (req, res) => {
   try {
-    const intel = readIntel();
+    const intel = readIntelligence();
     const alert = intel.alerts.find(a => a.id === req.params.id);
     if (!alert) return res.status(404).json({ error: 'Alert not found' });
     alert.dismissed = true;
-    writeIntel(intel);
+    writeIntelligence(intel);
     res.json({ message: 'Alert dismissed' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -252,9 +252,9 @@ router.put('/alerts/:id/dismiss', (req, res) => {
 // DELETE clear all dismissed alerts
 router.delete('/alerts/dismissed', (req, res) => {
   try {
-    const intel = readIntel();
+    const intel = readIntelligence();
     intel.alerts = (intel.alerts || []).filter(a => !a.dismissed);
-    writeIntel(intel);
+    writeIntelligence(intel);
     res.json({ message: 'Cleared dismissed alerts' });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -301,4 +301,5 @@ router.get('/recap', (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
-module.exports.runIntelligenceScrub = runIntelligenceScrub;
+router.runIntelligenceScrub = runIntelligenceScrub;
+module.exports = router;
