@@ -243,21 +243,27 @@ const SEED_ALERTS = [
     "id": "a1",
     "accountId": "hotel-tp011",
     "accountName": "Rustic Creek Cabins",
-    "title": "Local competitor launched aggressive direct booking campaign",
+    "title": "Local competitor launched aggressive direct booking campaign in the Rockies",
     "level": "high",
     "levelLabel": "Competitive Risk",
     "source": "Market Watch",
-    "pubDate": new Date().toISOString()
+    "pubDate": new Date().toISOString(),
+    "keyword": "Competitor",
+    "link": "#",
+    "summary": "Detailed monitoring shows a 15% shift in local traffic towards the competitor's direct site."
   },
   {
     "id": "a2",
     "accountId": "hotel-tp008",
     "accountName": "Metro Budget Stays",
-    "title": "Review sentiment dropping: 2.1 stars this week",
+    "title": "Review sentiment dropping: 2.1 stars this week — hygiene concerns flagged",
     "level": "critical",
     "levelLabel": "Service Failure",
     "source": "Reputation Intelligence",
-    "pubDate": new Date().toISOString()
+    "pubDate": new Date().toISOString(),
+    "keyword": "Hygiene",
+    "link": "#",
+    "summary": "Three specific reviews mentioned 'cleanliness' in the last 48 hours."
   }
 ];
 
