@@ -29,31 +29,35 @@ router.get('/', async (req, res) => {
     const accountsPath = path.join(__dirname, '../data/accounts.json');
     let rawAccounts = await readAll('accounts', accountsPath);
 
-    // EMERGENCY FAIL-SAFE: If DB is empty, use SEED_TICKETS
+    // EMERGENCY FAIL-SAFE: If DB is empty, use SEED_TICKETS from seedData
     if (!tickets || tickets.length === 0) {
       const { SEED_TICKETS } = require('../services/seedData');
       tickets = SEED_TICKETS;
       console.log('[X-Ray] DB empty, using hardcoded SEED_TICKETS fail-safe.');
     }
     
-    /* 
-    // TEMPORARY BYPASS: Diagnosing why filters return empty for Admin
+    // Multi-tenant Filter (Isolate by PartnerTag)
     if (req.user && req.user.role !== 'admin') {
-      const partnerTag = req.user.partnerTag;
-      if (partnerTag) {
-        const allowedAccounts = rawAccounts.filter(a => a.partnerTag === partnerTag).map(a => a.id);
-        tickets = tickets.filter(t => allowedAccounts.includes(t.accountId));
-      } else {
-        tickets = [];
-      }
-    } else if (req.query.partnerTag && req.query.partnerTag !== 'all' && req.query.partnerTag !== '') {
-      const pTag = req.query.partnerTag;
-      const allowedAccounts = rawAccounts.filter(a => a.partnerTag === pTag).map(a => a.id);
+      const pTag = (req.user.partnerTag || '').split('_')[0].toLowerCase(); // Handle potential sub-tags
+      const partnerTag = (req.user.partnerTag || '').toLowerCase().trim();
+      
+      const allowedAccounts = rawAccounts
+        .filter(a => (a.partnerTag || '').toLowerCase().trim() === partnerTag)
+        .map(a => a.id);
+      
       tickets = tickets.filter(t => allowedAccounts.includes(t.accountId));
+      console.log(`[X-Ray] Client Filter: UserTag=${partnerTag}, AllowedAccs=${allowedAccounts.length}, ResultTickets=${tickets.length}`);
+    } else if (req.query.partnerTag && req.query.partnerTag !== 'all' && req.query.partnerTag !== '') {
+      const pTag = req.query.partnerTag.toLowerCase().trim();
+      const allowedAccounts = rawAccounts
+        .filter(a => (a.partnerTag || '').toLowerCase().trim() === pTag)
+        .map(a => a.id);
+      
+      tickets = tickets.filter(t => allowedAccounts.includes(t.accountId));
+      console.log(`[X-Ray] Admin Filter: QueryTag=${pTag}, AllowedAccs=${allowedAccounts.length}, ResultTickets=${tickets.length}`);
     }
-    */
     
-    console.log(`[X-Ray] Tickets Route: Bypassing filters. Returning ${tickets.length} tickets.`);
+    console.log(`[X-Ray] Tickets Route: Returning ${tickets.length} tickets.`);
     
     if (req.query.accountId) {
       tickets = tickets.filter(t => t.accountId === req.query.accountId);
@@ -147,20 +151,20 @@ router.get('/meta/summary', async (req, res) => {
       tickets = SEED_TICKETS;
     }
 
-    /*
+    // Isolate by Partner for accurate stats
     if (req.user && req.user.role !== 'admin') {
-      const partnerTag = req.user.partnerTag;
-      if (partnerTag) {
-        const allowedAccounts = rawAccounts.filter(a => a.partnerTag === partnerTag).map(a => a.id);
-        tickets = tickets.filter(t => allowedAccounts.includes(t.accountId));
-      } else {
-        tickets = [];
-      }
-    } else if (req.query.partnerTag && req.query.partnerTag !== 'all') {
-      const allowedAccounts = rawAccounts.filter(a => a.partnerTag === req.query.partnerTag).map(a => a.id);
+      const partnerTag = (req.user.partnerTag || '').toLowerCase().trim();
+      const allowedAccounts = rawAccounts
+        .filter(a => (a.partnerTag || '').toLowerCase().trim() === partnerTag)
+        .map(a => a.id);
+      tickets = tickets.filter(t => allowedAccounts.includes(t.accountId));
+    } else if (req.query.partnerTag && req.query.partnerTag !== 'all' && req.query.partnerTag !== '') {
+      const pTag = req.query.partnerTag.toLowerCase().trim();
+      const allowedAccounts = rawAccounts
+        .filter(a => (a.partnerTag || '').toLowerCase().trim() === pTag)
+        .map(a => a.id);
       tickets = tickets.filter(t => allowedAccounts.includes(t.accountId));
     }
-    */
     
     const open = tickets.filter(t => t.status === 'Open');
     const escalated = tickets.filter(t => t.status === 'Escalated');
