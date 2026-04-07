@@ -36,11 +36,14 @@ window.Dashboard = {
         const pName = match ? match[1] : '';
         const text = match ? match[2] : h;
         const pTag = pName === 'Test Pilot' ? 'testpilot' : 'testclient2';
+        
+        // Hide tags if we are filtered to a specific partner
+        const isGlobal = !window.currentPartnerTag || window.currentPartnerTag === 'all';
 
         return `
           <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); padding:10px 12px; border-radius:8px; font-size:0.8rem; line-height:1.4; color:var(--text-secondary); position:relative; min-height:85px; display:flex; flex-direction:column; justify-content:space-between;">
             <div>${text}</div>
-            ${pName ? `
+            ${(pName && isGlobal) ? `
               <div style="text-align:right; margin-top:8px;">
                 <span style="font-size:0.6rem; font-weight:800; color:${pTag === 'testpilot' ? '#3b82f6' : '#8b5cf6'}; text-transform:uppercase; background:rgba(255,255,255,0.05); padding:2px 6px; border-radius:4px; letter-spacing:0.02em;">
                   ${pName}

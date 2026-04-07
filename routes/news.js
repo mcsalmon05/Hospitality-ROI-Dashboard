@@ -359,16 +359,21 @@ router.get('/recap', async (req, res) => {
     let accounts = await readAccounts();
 
     // Auth filtering
+    const allAccounts = await readAll('accounts', ACCOUNTS_PATH);
+    let myAccountIds = [];
+
     if (req.user && req.user.role !== 'admin') {
       const pTag = req.user.partnerTag;
-      accounts = accounts.filter(acc => acc.partnerTag === pTag);
-      const myAccountIds = accounts.map(acc => acc.id);
+      accounts = allAccounts.filter(acc => acc.partnerTag === pTag);
+      myAccountIds = accounts.map(acc => acc.id);
       alerts = alerts.filter(a => myAccountIds.includes(a.accountId));
-    } else if (req.query.partnerTag && req.query.partnerTag !== 'all') {
+    } else if (req.query.partnerTag && req.query.partnerTag !== 'all' && req.query.partnerTag !== '') {
       const pTag = req.query.partnerTag;
-      accounts = accounts.filter(acc => acc.partnerTag === pTag);
-      const myAccountIds = accounts.map(acc => acc.id);
+      accounts = allAccounts.filter(acc => acc.partnerTag === pTag);
+      myAccountIds = accounts.map(acc => acc.id);
       alerts = alerts.filter(a => myAccountIds.includes(a.accountId));
+    } else {
+      accounts = allAccounts;
     }
 
     const criticalAlerts = alerts.filter(a => a.level === 'critical').slice(0, 3);
