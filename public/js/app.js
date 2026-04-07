@@ -53,10 +53,17 @@ window.App = {
     const appContainer = document.getElementById('app-container');
     appContainer.style.visibility = 'visible';
     appContainer.style.opacity = '1';
+    
+    if (localStorage.getItem('csm_role') !== 'admin') {
+      document.querySelectorAll('.admin-only').forEach(el => el.style.display = 'none');
+    } else {
+      document.querySelectorAll('.admin-only').forEach(el => el.style.display = '');
+    }
   },
 
   async login(event) {
     event.preventDefault();
+    const email = document.getElementById('login-email').value;
     const password = document.getElementById('login-password').value;
     const btn = document.getElementById('login-btn');
     const err = document.getElementById('login-error');
@@ -68,12 +75,13 @@ window.App = {
       const res = await originalFetch(`${API}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password })
+        body: JSON.stringify({ email, password })
       });
       const data = await res.json();
       
       if (res.ok && data.token) {
         localStorage.setItem('csm_token', data.token);
+        localStorage.setItem('csm_role', data.role); // Store role for UI state
         this.showApp();
         this.setupNavigation();
         this.setupSearch();
@@ -99,11 +107,67 @@ window.App = {
   setupNavigation() {
     document.querySelectorAll('.nav-item').forEach(item => {
       item.addEventListener('click', (e) => {
+        if (!item.dataset.view) return;
         e.preventDefault();
         const view = item.dataset.view;
         this.navigate(view);
       });
     });
+  },
+
+  async resetPassword(event) {
+    event.preventDefault();
+    const newPassword = document.getElementById('settings-new-password').value;
+    const btn = event.target.querySelector('button[type="submit"]');
+    const og = btn.textContent;
+    btn.textContent = 'Updating...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`${API}/users/password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newPassword })
+      });
+      if (!res.ok) throw new Error('Failed to update password');
+      App.toast('Password updated successfully', 'success');
+      document.getElementById('form-password-reset').reset();
+    } catch (err) {
+      App.toast(err.message, 'error');
+    } finally {
+      btn.textContent = og;
+      btn.disabled = false;
+    }
+  },
+
+  async createUser(event) {
+    event.preventDefault();
+    const name = document.getElementById('create-user-name').value;
+    const email = document.getElementById('create-user-email').value;
+    const role = document.getElementById('create-user-role').value;
+    const password = document.getElementById('create-user-password').value;
+    
+    const btn = event.target.querySelector('button[type="submit"]');
+    const og = btn.textContent;
+    btn.textContent = 'Creating...';
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`${API}/users`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, role, password })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create user');
+      App.toast(`User ${name} created successfully!`, 'success');
+      document.getElementById('form-create-user').reset();
+    } catch (err) {
+      App.toast(err.message, 'error');
+    } finally {
+      btn.textContent = og;
+      btn.disabled = false;
+    }
   },
 
   navigate(view) {
@@ -127,7 +191,8 @@ window.App = {
       tickets: { title: 'Support Tickets', subtitle: 'Open and escalated issues' },
       renewals: { title: 'Renewal Pipeline', subtitle: 'Upcoming contract renewals' },
       intelligence: { title: 'Account Intelligence', subtitle: 'AI-powered news & signal monitoring' },
-      data: { title: 'Data Management Center', subtitle: 'Manage client portfolios and hospitality pipelines' }
+      data: { title: 'Data Management Center', subtitle: 'Manage client portfolios and hospitality pipelines' },
+      settings: { title: 'Account Settings', subtitle: 'Manage security and access' }
     };
     const meta = titles[view] || { title: view, subtitle: '' };
     document.getElementById('page-title').textContent = meta.title;

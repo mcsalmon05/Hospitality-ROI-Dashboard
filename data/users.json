@@ -1,0 +1,10 @@
+[
+  {
+    "id": "u-admin",
+    "email": "admin@csm.local",
+    "password": "$2a$10$w0b6VnLhF9eQZ1DYZfRyQ.zHOnL0yM4K8Sj2O9yM3F8xQdIbzX9y2", 
+    "role": "admin",
+    "name": "Super Admin",
+    "accountIds": []
+  }
+]

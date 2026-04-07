@@ -21,9 +21,13 @@
         <h2 style="font-size: 1.4rem; margin-bottom: 8px; color: #fff;">CSM Intelligence</h2>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 30px;">Authorized Access Only</p>
         <form onsubmit="App.login(event)">
+          <div style="text-align: left; margin-bottom: 16px;">
+            <label style="display: block; font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; letter-spacing: 0.5px; text-transform: uppercase;">Email Address</label>
+            <input type="email" id="login-email" required placeholder="admin@csm.local" class="search-input" style="width: 100%; height: 44px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: white; padding: 0 16px; font-size: 0.95rem; box-sizing: border-box;" autocomplete="username" />
+          </div>
           <div style="text-align: left; margin-bottom: 24px;">
-            <label style="display: block; font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; letter-spacing: 0.5px; text-transform: uppercase;">Admin PIN / Password</label>
-            <input type="password" id="login-password" required placeholder="Enter password" class="search-input" style="width: 100%; height: 44px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: white; padding: 0 16px; font-size: 0.95rem; text-align: center; letter-spacing: 2px;" autocomplete="current-password" />
+            <label style="display: block; font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); margin-bottom: 8px; letter-spacing: 0.5px; text-transform: uppercase;">Password</label>
+            <input type="password" id="login-password" required placeholder="Enter password" class="search-input" style="width: 100%; height: 44px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: white; padding: 0 16px; font-size: 0.95rem; box-sizing: border-box;" autocomplete="current-password" />
           </div>
           <button type="submit" class="btn btn--primary" id="login-btn" style="width: 100%; height: 44px; display: flex; align-items: center; justify-content: center; font-size: 0.95rem; font-weight: 600; box-shadow: 0 0 20px rgba(59,130,246,0.3);">
             Authenticate
@@ -57,6 +61,28 @@
       <a href="#" class="nav-item" data-view="triage" id="nav-triage">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         <span>Triage</span>
+      </a>
+      <a href="#" class="nav-item" data-view="tickets" id="nav-tickets">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span>Tickets</span>
+        <span class="badge badge--risk" id="badge-tickets">0</span>
+      </a>
+      <a href="#" class="nav-item" data-view="renewals" id="nav-renewals">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>Renewals</span>
+      </a>
+      <a href="#" class="nav-item" data-view="intelligence" id="nav-intelligence">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        <span>Intelligence</span>
+        <span class="badge badge--critical" id="badge-intel">0</span>
+      </a>
+      <a href="#" class="nav-item admin-only" data-view="data" id="nav-data">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        <span>Data Hub</span>
+      </a>
+      <a href="#" class="nav-item" data-view="settings" id="nav-settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        <span>Settings</span>
       </a>
       <a href="#" class="nav-item" data-view="renewals" id="nav-renewals">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
@@ -265,7 +291,7 @@
               <option value="all">All CSMs</option>
             </select>
           </div>
-          <div class="toolbar-right">
+          <div class="toolbar-right admin-only">
             <button class="btn btn--primary" onclick="Accounts.showAddModal()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Add Account
@@ -541,6 +567,57 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+    <!-- ═══ SETTINGS VIEW ═══ -->
+    <div class="view" id="view-settings">
+      <div class="card" style="max-width: 600px; margin: 0 auto; margin-top: 40px;">
+        <h3 style="margin-bottom: 24px; color: #fff;">Account Settings</h3>
+        
+        <form id="form-password-reset" onsubmit="App.resetPassword(event)">
+          <div class="modal-section-title">Change Password</div>
+          <div style="margin-bottom: 16px;">
+            <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">New Password</label>
+            <input type="password" id="settings-new-password" class="search-input" style="width:100%; border:1px solid var(--border);" required minlength="5" />
+          </div>
+          <div style="text-align:right;">
+            <button type="submit" class="btn btn--primary">Update Password</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card admin-only" style="max-width: 600px; margin: 24px auto;">
+        <h3 style="margin-bottom: 24px; color: #fff;">Admin: Create Client Account</h3>
+        <p style="color:var(--text-muted); font-size: 0.85rem; margin-bottom: 20px;">Provide login access for clients to view their portals.</p>
+        
+        <form id="form-create-user" onsubmit="App.createUser(event)">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Name</label>
+              <input type="text" id="create-user-name" class="search-input" style="width:100%; border:1px solid var(--border);" required />
+            </div>
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Email</label>
+              <input type="email" id="create-user-email" class="search-input" style="width:100%; border:1px solid var(--border);" required />
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px;">
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Role</label>
+              <select id="create-user-role" class="select-sm" style="width:100%; border:1px solid var(--border); height:38px;">
+                <option value="client">Client</option>
+                <option value="admin">Administrator</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block; font-size:0.8rem; margin-bottom:4px; color:var(--text-secondary);">Assign Temporary Password</label>
+              <input type="text" id="create-user-password" class="search-input" style="width:100%; border:1px solid var(--border);" required />
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <button type="submit" class="btn btn--primary">Create User Profile</button>
+          </div>
+        </form>
       </div>
     </div>
   </main>

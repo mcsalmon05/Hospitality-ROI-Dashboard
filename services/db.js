@@ -28,7 +28,8 @@ const collections = {
   accounts: 'hospitality_properties',
   news: 'daily_intelligence',
   tickets: 'triage_queue',
-  recaps: 'daily_briefings'
+  recaps: 'daily_briefings',
+  users: 'dashboard_users'
 };
 
 const getCollection = (key) => db ? db.collection(collections[key]) : null;

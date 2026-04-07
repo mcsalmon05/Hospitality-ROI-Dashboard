@@ -7,6 +7,7 @@ const accountsRouter = require('./routes/accounts');
 const ticketsRouter = require('./routes/tickets');
 const newsRouter = require('./routes/news');
 const healthRouter = require('./routes/health');
+const { router: usersRouter, authMiddleware } = require('./routes/users');
 const { runIntelligenceScrub } = require('./routes/news');
 
 const app = express();
@@ -28,9 +29,11 @@ const startDailyScheduler = () => {
   cron.schedule('0 7 * * *', async () => {
     try {
       const fetch = require('node-fetch');
+      const jwt = require('jsonwebtoken');
+      const mockToken = jwt.sign({ id: 'system', role: 'admin' }, process.env.JWT_SECRET || 'secret123');
       await fetch('http://localhost:3000/api/news/scrub', { 
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${Buffer.from(ADMIN_PASSWORD).toString('base64')}` }
+        headers: { 'Authorization': `Bearer ${mockToken}` }
       });
       console.log('[Scheduler] 7:00 AM Scrub Complete.');
     } catch (err) {
@@ -42,9 +45,11 @@ const startDailyScheduler = () => {
   cron.schedule('30 7 * * *', async () => {
     try {
       const fetch = require('node-fetch');
+      const jwt = require('jsonwebtoken');
+      const mockToken = jwt.sign({ id: 'system', role: 'admin' }, process.env.JWT_SECRET || 'secret123');
       await fetch('http://localhost:3000/api/news/recap', { 
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${Buffer.from(ADMIN_PASSWORD).toString('base64')}` }
+        headers: { 'Authorization': `Bearer ${mockToken}` }
       });
       console.log('[Scheduler] 7:30 AM Recap Complete.');
     } catch (err) {
@@ -54,23 +59,11 @@ const startDailyScheduler = () => {
 };
 
 // ─── Authentication Gateway ────────────────────
-app.post('/api/auth/login', (req, res) => {
-  const { password } = req.body;
-  if (password === ADMIN_PASSWORD) {
-    res.json({ token: Buffer.from(password).toString('base64') });
-  } else {
-    res.status(401).json({ error: 'Invalid password' });
-  }
-});
-
+app.use('/api/users', usersRouter);
+app.use('/api/auth', usersRouter); // Forward to the router where POST /login is defined
 app.use('/api', (req, res, next) => {
-  if (req.path.startsWith('/auth')) return next();
-  
-  const authHeader = req.headers.authorization;
-  if (!authHeader || authHeader !== `Bearer ${Buffer.from(ADMIN_PASSWORD).toString('base64')}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  next();
+  if (req.path.startsWith('/auth') || req.path.startsWith('/users/login')) return next();
+  authMiddleware(req, res, next);
 });
 
 // Routes
