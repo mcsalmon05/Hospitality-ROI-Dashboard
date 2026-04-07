@@ -2,7 +2,7 @@
   {
     "id": "u-admin",
     "email": "admin@csm.local",
-    "password": "$2a$10$w0b6VnLhF9eQZ1DYZfRyQ.zHOnL0yM4K8Sj2O9yM3F8xQdIbzX9y2", 
+    "password": "$2b$10$dim.d8qeg4eygNaGcSYq1.LnSchCnQtCNjp2BEgTZ/B0vFmU.Hnae", 
     "role": "admin",
     "name": "Super Admin",
     "accountIds": []
