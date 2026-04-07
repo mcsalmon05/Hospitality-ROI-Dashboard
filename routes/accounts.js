@@ -13,14 +13,14 @@ const readAccounts = () => {
   return JSON.parse(fs.readFileSync(DATA_PATH, 'utf8'));
 };
 
-const writeAccounts = (accounts) => {
+const writeAccounts = async (accounts) => {
   fs.writeFileSync(DATA_PATH, JSON.stringify(accounts, null, 2));
   
   // Cloud Sync (Mirroring)
   if (isCloud) {
-    accounts.forEach(acc => {
-      writeOne('accounts', acc.id || acc.name, acc);
-    });
+    for (const acc of accounts) {
+      await writeOne('accounts', acc.id || acc.name, acc);
+    }
   }
 };
 
@@ -244,7 +244,7 @@ router.get('/:id', (req, res) => {
 });
 
 // POST create account
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   try {
     const accounts = readAccounts();
     const newAccount = {
@@ -254,7 +254,7 @@ router.post('/', (req, res) => {
       updatedAt: new Date().toISOString()
     };
     accounts.push(newAccount);
-    writeAccounts(accounts);
+    await writeAccounts(accounts);
     const healthScore = calculateHealthScore(newAccount);
     res.status(201).json({ ...newAccount, healthScore, status: getStatus(healthScore) });
   } catch (err) {
@@ -263,13 +263,13 @@ router.post('/', (req, res) => {
 });
 
 // PUT update account
-router.put('/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
   try {
     const accounts = readAccounts();
     const idx = accounts.findIndex(a => a.id === req.params.id);
     if (idx === -1) return res.status(404).json({ error: 'Account not found' });
     accounts[idx] = { ...accounts[idx], ...req.body, updatedAt: new Date().toISOString() };
-    writeAccounts(accounts);
+    await writeAccounts(accounts);
     const healthScore = calculateHealthScore(accounts[idx]);
     res.json({ ...accounts[idx], healthScore, status: getStatus(healthScore) });
   } catch (err) {
@@ -291,7 +291,7 @@ router.delete('/:id', (req, res) => {
 });
 
 // POST bulk import
-router.post('/import/bulk', (req, res) => {
+router.post('/import/bulk', async (req, res) => {
   try {
     const { accounts: incoming } = req.body;
     if (!Array.isArray(incoming)) return res.status(400).json({ error: 'Expected array of accounts' });
@@ -303,7 +303,7 @@ router.post('/import/bulk', (req, res) => {
       updatedAt: new Date().toISOString()
     }));
     const merged = [...existing, ...newOnes.filter(n => !existing.find(e => e.id === n.id))];
-    writeAccounts(merged);
+    await writeAccounts(merged);
     res.json({ imported: newOnes.length, total: merged.length });
   } catch (err) {
     res.status(500).json({ error: err.message });

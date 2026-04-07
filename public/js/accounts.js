@@ -499,9 +499,10 @@ window.Accounts = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
       });
-      if (!res.ok) throw new Error('Failed to create account');
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Failed to create account');
       
-      App.toast('Account successfully created', 'success');
+      App.toast(`Property "${data.name}" added to portfolio`, 'success');
       Accounts.closeModal();
       
       // Refresh grids
@@ -510,6 +511,7 @@ window.Accounts = {
         Dashboard.load();
       }
     } catch(e) {
+      console.error('[Accounts] Create Error:', e);
       App.toast(e.message, 'error');
       btn.innerHTML = originalText;
       btn.disabled = false;
