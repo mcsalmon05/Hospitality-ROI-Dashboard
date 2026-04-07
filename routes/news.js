@@ -160,7 +160,10 @@ function getNextScrubTime() {
 // GET all alerts
 router.get('/alerts', async (req, res) => {
   try {
-    const alerts = await readIntelligence();
+    const data = await readIntelligence();
+    let alerts = Array.isArray(data) ? data : (data.alerts || []);
+    
+    console.log(`[X-Ray] News Alerts Route: Found ${alerts.length} alerts. Filters:`, req.query);
 
     if (req.query.accountId) {
       alerts = alerts.filter(a => a.accountId === req.query.accountId);
@@ -193,7 +196,8 @@ router.get('/alerts', async (req, res) => {
 // GET intelligence summary
 router.get('/summary', async (req, res) => {
   try {
-    let alerts = await readIntelligence();
+    const data = await readIntelligence();
+    let alerts = Array.isArray(data) ? data : (data.alerts || []);
     
     // Auth filtering
     if (req.user && req.user.role !== 'admin') {
@@ -201,18 +205,21 @@ router.get('/summary', async (req, res) => {
       const accounts = await readAll('accounts', ACCOUNTS_PATH);
       const myAccountIds = accounts.filter(acc => acc.partnerTag === pTag).map(acc => acc.id);
       alerts = alerts.filter(a => myAccountIds.includes(a.accountId));
+    } else if (req.query.partnerTag && req.query.partnerTag !== 'all') {
+      const pTag = req.query.partnerTag;
+      const accounts = await readAll('accounts', ACCOUNTS_PATH);
+      const myAccountIds = accounts.filter(acc => acc.partnerTag === pTag).map(acc => acc.id);
+      alerts = alerts.filter(a => myAccountIds.includes(a.accountId));
     }
-    
+
     const active = alerts.filter(a => !a.dismissed);
     res.json({
       total: alerts.length,
       active: active.length,
       critical: active.filter(a => a.level === 'critical').length,
       high: active.filter(a => a.level === 'high').length,
-      medium: active.filter(a => a.level === 'medium').length,
-      positive: active.filter(a => a.level === 'positive').length,
-      lastScrub: intel.lastScrub,
-      nextScrub: intel.nextScrub
+      lastScrub: data.lastScrub,
+      alerts: alerts // Combined response for easier FE loading
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

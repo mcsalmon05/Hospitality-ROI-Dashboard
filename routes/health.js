@@ -139,6 +139,7 @@ router.get('/triage', async (req, res) => {
 router.get('/renewals', async (req, res) => {
   try {
     let accounts = await readAll('accounts', ACCOUNTS_PATH);
+    console.log(`[X-Ray] Renewals Route: Fetched ${accounts.length} total accounts. Query:`, req.query);
     
     // Auth filter
     if (req.user && req.user.role !== 'admin') {

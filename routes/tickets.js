@@ -37,6 +37,8 @@ const writeTickets = async (tickets) => {
 router.get('/', async (req, res) => {
   try {
     let tickets = await readAll('tickets', TICKETS_PATH);
+    console.log(`[X-Ray] Tickets Route: Fetched ${tickets.length} total tickets. Query:`, req.query);
+    
     if (req.query.accountId) {
       tickets = tickets.filter(t => t.accountId === req.query.accountId);
     }

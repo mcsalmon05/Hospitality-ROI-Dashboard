@@ -233,9 +233,9 @@ const SEED_USERS = [
 ];
 
 const SEED_TICKETS = [
-  { "id": "t1", "accountId": "hotel-tp008", "title": "PMS Integration Failure", "priority": "high", "status": "Open", "category": "Technical" },
-  { "id": "t2", "accountId": "hotel-tp004", "title": "Bulk Guest Data Error", "priority": "high", "status": "In Progress", "category": "Data" },
-  { "id": "t3", "accountId": "hotel-tp002", "title": "Billing Clarification", "priority": "medium", "status": "Open", "category": "Billing" }
+  { "id": "t1", "accountId": "hotel-tp008", "accountName": "Metro Budget Stays", "title": "PMS Integration Failure", "priority": "Critical", "status": "Escalated", "category": "Technical", "assignee": "Sarah Chen", "createdAt": new Date(Date.now() - 518400000).toISOString() },
+  { "id": "t2", "accountId": "hotel-tp004", "accountName": "Seaside Budget Inn", "title": "Bulk Guest Data Error", "priority": "High", "status": "In Progress", "category": "Data", "assignee": "Alex Taylor", "createdAt": new Date(Date.now() - 345600000).toISOString() },
+  { "id": "t3", "accountId": "hotel-tp011", "accountName": "Rustic Creek Cabins", "title": "Billing Clarification", "priority": "Medium", "status": "Open", "category": "Billing", "assignee": "Alex Taylor", "createdAt": new Date(Date.now() - 172800000).toISOString() }
 ];
 
 const SEED_ALERTS = [
