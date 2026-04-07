@@ -266,7 +266,7 @@ window.App = {
 
     // Update header
     const titles = {
-      dashboard: { title: 'Consultancy Hub', subtitle: 'Global Partner Portfolio ROI & Performance' },
+      dashboard: { title: 'CSM Intel', subtitle: 'Global Partner Portfolio ROI & Performance' },
       accounts: { title: 'Partner Portfolios', subtitle: 'Active hospitality client performance by partner' },
       triage: { title: 'Triage Queue', subtitle: 'At-risk partner accounts requiring intervention' },
       tickets: { title: 'Support Tickets', subtitle: 'Open and escalated partner issues' },
