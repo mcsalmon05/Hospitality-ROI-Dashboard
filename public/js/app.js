@@ -157,10 +157,15 @@ window.App = {
       window.currentPartnerTag = partnerTag;
     }
     
-    // Refresh the dashboard and other views
-    await Dashboard.init();
-    if (this.currentView === 'accounts') await Accounts.load();
-    if (this.currentView === 'triage') await Triage.load();
+    await this.loadBadges();
+    switch(this.currentView) {
+      case 'dashboard':    await Dashboard.init(); break;
+      case 'accounts':     await Accounts.load(); break;
+      case 'triage':       await Triage.load(); break;
+      case 'tickets':      await Tickets.load(); break;
+      case 'renewals':     await Renewals.load(); break;
+      case 'intelligence': await Intelligence.load(); break;
+    }
     
     this.toast(userId === 'all' ? 'Showing Total Portfolio' : `Viewing ${option.text} Portfolio`, 'info');
   },
