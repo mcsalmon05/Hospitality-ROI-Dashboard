@@ -316,7 +316,7 @@ window.App = {
       const el = id => document.getElementById(id);
       if (el('badge-accounts')) el('badge-accounts').textContent = accSummary.total || 0;
       if (el('badge-triage'))   el('badge-triage').textContent   = triage.length || 0;
-      if (el('badge-tickets'))  el('badge-tickets').textContent  = ticketSummary.open || 0;
+      if (el('badge-tickets'))  el('badge-tickets').textContent  = ticketSummary.total || 0;
       if (el('badge-intel'))    el('badge-intel').textContent    = (intelSummary.critical + intelSummary.high) || 0;
     } catch (e) {
       console.warn('[App] Badge load failed:', e.message);
