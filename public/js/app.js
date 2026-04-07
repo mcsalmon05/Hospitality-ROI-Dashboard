@@ -20,6 +20,8 @@ window.fetch = async function() {
   
   const res = await originalFetch(resource, config);
   if (res.status === 401 && (!resource || !resource.toString().includes('/auth/login'))) {
+    console.warn('[Auth] 401 Unauthorized. Clearing token and forcing login.');
+    localStorage.removeItem('csm_token');
     App.showLogin();
   }
   return res;
@@ -87,6 +89,11 @@ window.App = {
       btn.textContent = 'Authenticate';
       btn.disabled = false;
     }
+  },
+
+  logout() {
+    localStorage.removeItem('csm_token');
+    window.location.reload();
   },
 
   setupNavigation() {
